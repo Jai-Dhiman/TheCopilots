@@ -14,7 +14,7 @@ function Shimmer({ lines = 3 }: { lines?: number }) {
       {Array.from({ length: lines }, (_, i) => (
         <div
           key={i}
-          className="h-4 bg-surface-700 rounded animate-pulse"
+          className="h-4 bg-surface-700 animate-pulse"
           style={{ width: `${SHIMMER_WIDTHS[i % SHIMMER_WIDTHS.length]}%` }}
         />
       ))}
@@ -35,7 +35,7 @@ function Section({
 }) {
   return (
     <div className="mb-6">
-      <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
+      <h3 className="text-sm font-semibold text-surface-400 font-mono uppercase tracking-wider mb-3">
         {title}
       </h3>
       <div
@@ -51,7 +51,7 @@ function Section({
 export function AnalysisStream({ state }: Props) {
   if (state.status === 'idle') {
     return (
-      <div className="flex items-center justify-center h-full text-slate-500 text-sm">
+      <div className="flex items-center justify-center h-full text-surface-500 text-sm">
         Enter a feature description to begin analysis
       </div>
     );
@@ -60,7 +60,7 @@ export function AnalysisStream({ state }: Props) {
   if (state.status === 'error') {
     return (
       <div className="p-6">
-        <div className="bg-red-950/50 border border-red-800 rounded-lg p-4 text-red-300 text-sm">
+        <div className="bg-red-950/50 border border-red-800 p-4 text-red-300 text-sm">
           {state.error}
         </div>
       </div>
@@ -80,10 +80,10 @@ export function AnalysisStream({ state }: Props) {
         {state.features && (
           <div className="space-y-2">
             {state.features.map((f, i) => (
-              <div key={i} className="bg-surface-700 rounded-lg p-3 text-sm">
-                <span className="text-slate-200 font-semibold">{f.feature_type}</span>
-                {f.count && <span className="text-slate-400 ml-2">x{f.count}</span>}
-                <div className="text-slate-400 mt-1 font-mono text-xs">
+              <div key={i} className="bg-surface-700 border border-surface-600 p-3 text-sm">
+                <span className="text-surface-200 font-semibold">{f.feature_type}</span>
+                {f.count && <span className="text-surface-400 ml-2">x{f.count}</span>}
+                <div className="text-surface-400 mt-1 font-mono text-xs">
                   {Object.entries(f.geometry).map(([k, v]) => `${k}: ${v}`).join(' | ')}
                 </div>
               </div>
@@ -103,10 +103,10 @@ export function AnalysisStream({ state }: Props) {
             {[state.datumScheme.primary, state.datumScheme.secondary, state.datumScheme.tertiary]
               .filter(Boolean)
               .map((d) => (
-                <div key={d!.datum} className="bg-surface-700 rounded-lg p-3 flex-1">
-                  <div className="text-xl font-bold text-slate-200">{d!.datum}</div>
-                  <div className="text-sm text-slate-300 mt-1">{d!.surface}</div>
-                  <div className="text-xs text-slate-500 mt-1">{d!.reasoning}</div>
+                <div key={d!.datum} className="bg-surface-700 border border-surface-600 p-3 flex-1">
+                  <div className="text-xl font-bold text-accent-400 font-mono">{d!.datum}</div>
+                  <div className="text-sm text-surface-300 mt-1">{d!.surface}</div>
+                  <div className="text-xs text-surface-500 mt-1">{d!.reasoning}</div>
                 </div>
               ))}
           </div>
@@ -132,14 +132,14 @@ export function AnalysisStream({ state }: Props) {
       >
         {state.reasoning && (
           <div className="space-y-3 text-sm">
-            <p className="text-slate-300">{state.reasoning.summary}</p>
-            <div className="bg-surface-700 rounded-lg p-3">
-              <h4 className="text-xs font-semibold text-slate-400 uppercase mb-1">Manufacturing Notes</h4>
-              <p className="text-slate-300">{state.reasoning.manufacturing_notes}</p>
+            <p className="text-surface-300">{state.reasoning.summary}</p>
+            <div className="bg-surface-700 border border-surface-600 p-3">
+              <h4 className="text-xs font-semibold text-surface-400 font-mono uppercase mb-1">Manufacturing Notes</h4>
+              <p className="text-surface-300">{state.reasoning.manufacturing_notes}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {state.reasoning.standards_references.map((ref) => (
-                <span key={ref} className="px-2 py-1 bg-surface-700 rounded text-xs text-slate-400 font-mono">
+                <span key={ref} className="px-2 py-1 bg-surface-700 border border-surface-600 text-xs text-surface-400 font-mono">
                   {ref}
                 </span>
               ))}
@@ -155,7 +155,7 @@ export function AnalysisStream({ state }: Props) {
         pending={isActive && state.warnings === null && state.reasoning !== null}
       >
         {state.warnings?.map((warning, i) => (
-          <div key={i} className="bg-yellow-950/30 border border-yellow-800/50 rounded-lg p-3 mb-2 text-sm text-yellow-200">
+          <div key={i} className="bg-accent-900/30 border border-accent-500/30 p-3 mb-2 text-sm text-yellow-200">
             {warning}
           </div>
         ))}

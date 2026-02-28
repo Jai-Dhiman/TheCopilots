@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ScreenCapture } from './ScreenCapture';
 
 const PRESETS: { label: string; description: string }[] = [
   {
@@ -19,13 +20,16 @@ const PRESETS: { label: string; description: string }[] = [
   },
 ];
 
+type TabId = 'text' | 'capture';
+
 interface Props {
-  onAnalyze: (description: string) => void;
+  onAnalyze: (description: string, imageBlob?: Blob) => void;
   isStreaming: boolean;
 }
 
 export function FeatureInput({ onAnalyze, isStreaming }: Props) {
   const [description, setDescription] = useState('');
+  const [activeTab, setActiveTab] = useState<TabId>('text');
 
   const handleSubmit = () => {
     const text = description.trim();
@@ -33,43 +37,78 @@ export function FeatureInput({ onAnalyze, isStreaming }: Props) {
     onAnalyze(text);
   };
 
+  const handleCaptureAnalyze = (blob: Blob, captureDescription: string) => {
+    onAnalyze(captureDescription || 'Analyze the captured CAD feature', blob);
+  };
+
+  const tabs: { id: TabId; label: string }[] = [
+    { id: 'text', label: 'TEXT' },
+    { id: 'capture', label: 'CAD CAPTURE' },
+  ];
+
   return (
-    <div className="flex flex-col h-full p-6 gap-4">
-      <h2 className="text-lg font-semibold text-slate-200">Feature Description</h2>
-
-      <textarea
-        className="flex-1 bg-surface-700 border border-surface-600 rounded-lg p-4 text-slate-200 font-mono text-sm resize-none placeholder:text-slate-500 focus:outline-none focus:border-slate-400 min-h-[160px]"
-        placeholder="Describe your part feature..."
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSubmit();
-        }}
-      />
-
-      {/* Preset buttons */}
-      <div>
-        <p className="text-xs text-slate-500 mb-2">Quick examples:</p>
-        <div className="flex flex-wrap gap-2">
-          {PRESETS.map((preset) => (
-            <button
-              key={preset.label}
-              className="px-3 py-1.5 text-xs bg-surface-700 border border-surface-600 rounded-md text-slate-400 hover:text-slate-200 hover:border-slate-400 transition-colors"
-              onClick={() => setDescription(preset.description)}
-            >
-              {preset.label}
-            </button>
-          ))}
-        </div>
+    <div className="flex flex-col h-full">
+      {/* Tab bar */}
+      <div className="flex border-b border-surface-700">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            className={`flex-1 py-2.5 text-xs font-mono font-semibold uppercase tracking-wide transition-colors ${
+              activeTab === tab.id
+                ? 'text-accent-400 border-b-2 border-accent-500'
+                : 'text-surface-500 hover:text-surface-300'
+            }`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      <button
-        className="w-full py-3 rounded-lg font-semibold transition-colors bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed"
-        onClick={handleSubmit}
-        disabled={isStreaming || !description.trim()}
-      >
-        {isStreaming ? 'Analyzing...' : 'Analyze'}
-      </button>
+      {/* Tab content */}
+      {activeTab === 'text' ? (
+        <div className="flex flex-col flex-1 p-6 gap-4">
+          <h2 className="text-lg font-semibold text-surface-200 font-mono">Feature Description</h2>
+
+          <textarea
+            className="flex-1 bg-surface-700 border border-surface-600 p-4 text-surface-200 font-mono text-sm resize-none placeholder:text-surface-500 focus:outline-none focus:border-accent-500 min-h-[160px]"
+            placeholder="Describe your part feature..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSubmit();
+            }}
+          />
+
+          {/* Preset buttons */}
+          <div>
+            <p className="text-xs text-surface-500 mb-2 font-mono">Quick examples:</p>
+            <div className="flex flex-wrap gap-2">
+              {PRESETS.map((preset) => (
+                <button
+                  key={preset.label}
+                  className="px-3 py-1.5 text-xs bg-surface-700 border border-surface-600 text-surface-400 hover:text-surface-200 hover:border-accent-500 transition-colors font-mono"
+                  onClick={() => setDescription(preset.description)}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button
+            className="w-full py-3 font-semibold transition-colors bg-accent-500 text-surface-950 hover:bg-accent-400 disabled:opacity-40 disabled:cursor-not-allowed font-mono uppercase tracking-wide"
+            onClick={handleSubmit}
+            disabled={isStreaming || !description.trim()}
+          >
+            {isStreaming ? 'Analyzing...' : 'Analyze'}
+          </button>
+        </div>
+      ) : (
+        <div className="flex-1 min-h-0">
+          <ScreenCapture onAnalyze={handleCaptureAnalyze} isStreaming={isStreaming} />
+        </div>
+      )}
     </div>
   );
 }

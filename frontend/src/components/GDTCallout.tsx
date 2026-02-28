@@ -23,7 +23,7 @@ const SYMBOL_COLORS: Record<string, string> = {
 };
 
 function getSymbolColor(symbolName: string): string {
-  return SYMBOL_COLORS[symbolName] ?? 'text-slate-300';
+  return SYMBOL_COLORS[symbolName] ?? 'text-surface-300';
 }
 
 function capitalizeFirst(s: string): string {
@@ -39,16 +39,16 @@ export function GDTCallout({ callout }: Props) {
   const datumCount = callout.datum_references.length;
 
   return (
-    <div className="mb-4">
+    <div className="mb-5">
       <div
-        className="inline-grid border-2 border-slate-400 rounded-sm font-mono text-lg"
+        className="inline-grid border-2 border-surface-200 bg-surface-950 font-mono text-lg"
         style={{
           gridTemplateColumns: `auto auto${datumCount > 0 ? ` repeat(${datumCount}, auto)` : ''}`,
         }}
       >
         {/* Symbol cell */}
         <div
-          className={`px-3 py-2 border-r-2 border-slate-400 flex items-center justify-center ${color}`}
+          className={`px-3 py-2 border-r-2 border-surface-200 flex items-center justify-center ${color}`}
           title={callout.symbol_name}
         >
           {callout.symbol}
@@ -56,7 +56,7 @@ export function GDTCallout({ callout }: Props) {
 
         {/* Tolerance + modifier cell */}
         <div
-          className={`px-3 py-2 flex items-center justify-center text-slate-200 ${datumCount > 0 ? 'border-r-2 border-slate-400' : ''}`}
+          className={`px-3 py-2 flex items-center justify-center text-surface-100 ${datumCount > 0 ? 'border-r-2 border-surface-200' : ''}`}
         >
           {callout.tolerance_value}
           {callout.modifier_symbol && (
@@ -68,7 +68,7 @@ export function GDTCallout({ callout }: Props) {
         {callout.datum_references.map((datum, i) => (
           <div
             key={datum}
-            className={`px-3 py-2 flex items-center justify-center text-slate-200 ${i < datumCount - 1 ? 'border-r-2 border-slate-400' : ''}`}
+            className={`px-3 py-2 flex items-center justify-center text-surface-100 font-semibold ${i < datumCount - 1 ? 'border-r-2 border-surface-200' : ''}`}
           >
             {datum}
           </div>
@@ -76,7 +76,7 @@ export function GDTCallout({ callout }: Props) {
       </div>
 
       {/* Label below frame */}
-      <div className="mt-1 text-sm text-slate-400">
+      <div className="mt-1 text-sm text-surface-400">
         <span className={color}>{capitalizeFirst(callout.symbol_name)}</span>
         <span className="mx-2">|</span>
         <span>{callout.feature}</span>

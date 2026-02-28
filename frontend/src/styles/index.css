@@ -1,16 +1,57 @@
 @import "tailwindcss";
 
 @theme {
-  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
 
-  --color-gdt-form: #60a5fa;
-  --color-gdt-orientation: #4ade80;
-  --color-gdt-location: #f87171;
-  --color-gdt-profile: #c084fc;
-  --color-gdt-runout: #fb923c;
+  --color-surface-950: #0a0a0a;
+  --color-surface-900: #141414;
+  --color-surface-800: #1c1c1c;
+  --color-surface-700: #2a2a2a;
+  --color-surface-600: #3a3a3a;
+  --color-surface-500: #525252;
+  --color-surface-400: #737373;
+  --color-surface-300: #a3a3a3;
+  --color-surface-200: #d4d4d4;
+  --color-surface-100: #e5e5e5;
 
-  --color-surface-900: #0f172a;
-  --color-surface-800: #1e293b;
-  --color-surface-700: #334155;
-  --color-surface-600: #475569;
+  --color-accent-500: #F59E0B;
+  --color-accent-400: #FBBF24;
+  --color-accent-600: #D97706;
+  --color-accent-300: #FCD34D;
+  --color-accent-900: #451A03;
+
+  --color-gdt-form: #60A5FA;
+  --color-gdt-orientation: #34D399;
+  --color-gdt-location: #F87171;
+  --color-gdt-profile: #A78BFA;
+  --color-gdt-runout: #FB923C;
+}
+
+@layer base {
+  body {
+    @apply bg-surface-900 text-surface-200 font-sans antialiased;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+  }
+}
+
+@layer utilities {
+  @keyframes indicator-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .indicator-pulse {
+    animation: indicator-pulse 2s ease-in-out infinite;
+  }
 }

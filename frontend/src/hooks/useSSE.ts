@@ -59,6 +59,20 @@ export function parseSSEFrame(frame: string): { type: string; data: unknown } | 
   }
 }
 
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUrl = reader.result as string;
+      // Strip the "data:image/jpeg;base64," prefix
+      const base64 = dataUrl.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 export function useSSE() {
   const [state, dispatch] = useReducer(analysisReducer, initialState);
   const abortRef = useRef<AbortController | null>(null);
@@ -73,7 +87,7 @@ export function useSSE() {
     dispatch({ type: 'reset' });
   }, [abort]);
 
-  const analyze = useCallback(async (request: AnalyzeRequest) => {
+  const analyze = useCallback(async (request: AnalyzeRequest, imageBlob?: Blob) => {
     abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -81,10 +95,15 @@ export function useSSE() {
     dispatch({ type: 'connecting' });
 
     try {
+      const body: AnalyzeRequest = { ...request };
+      if (imageBlob) {
+        body.image = await blobToBase64(imageBlob);
+      }
+
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(request),
+        body: JSON.stringify(body),
         signal: controller.signal,
       });
 
