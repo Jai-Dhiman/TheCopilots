@@ -1,0 +1,27 @@
+[project]
+name = "toleranceai-backend"
+version = "0.1.0"
+description = "GD&T copilot backend"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]",
+    "sse-starlette>=2.0",
+    "pydantic>=2.0",
+    "aiosqlite",
+    "httpx",
+    "sentence-transformers",
+    "numpy",
+    "python-multipart",
+    "pillow",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-asyncio", "httpx"]
+
+[tool.setuptools.packages.find]
+include = ["api*", "models*", "brain*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
