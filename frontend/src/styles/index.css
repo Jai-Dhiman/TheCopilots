@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+
+  --color-gdt-form: #60a5fa;
+  --color-gdt-orientation: #4ade80;
+  --color-gdt-location: #f87171;
+  --color-gdt-profile: #c084fc;
+  --color-gdt-runout: #fb923c;
+
+  --color-surface-900: #0f172a;
+  --color-surface-800: #1e293b;
+  --color-surface-700: #334155;
+  --color-surface-600: #475569;
+}
