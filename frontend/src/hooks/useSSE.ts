@@ -11,6 +11,9 @@ export const initialState: AnalysisState = {
   warnings: null,
   metadata: null,
   error: null,
+  currentStep: null,
+  currentStepMessage: null,
+  totalSteps: null,
 };
 
 export function analysisReducer(state: AnalysisState, action: SSEAction): AnalysisState {
@@ -32,7 +35,9 @@ export function analysisReducer(state: AnalysisState, action: SSEAction): Analys
     case 'warnings':
       return { ...state, status: 'streaming', warnings: action.payload.warnings };
     case 'analysis_complete':
-      return { ...state, status: 'complete', metadata: action.payload.metadata };
+      return { ...state, status: 'complete', metadata: action.payload.metadata, currentStep: null, currentStepMessage: null, totalSteps: null };
+    case 'progress':
+      return { ...state, status: 'streaming', currentStep: action.payload.step, currentStepMessage: action.payload.message, totalSteps: action.payload.total_steps };
     case 'error':
       return { ...state, status: 'error', error: action.payload };
   }
@@ -129,7 +134,13 @@ export function useSSE() {
         for (const frame of frames) {
           const parsed = parseSSEFrame(frame);
           if (parsed) {
-            dispatch({ type: parsed.type, payload: parsed.data } as SSEAction);
+            if (parsed.type === 'error') {
+              const errorData = parsed.data as Record<string, unknown>;
+              const message = typeof errorData.error === 'string' ? errorData.error : JSON.stringify(errorData);
+              dispatch({ type: 'error', payload: message });
+            } else {
+              dispatch({ type: parsed.type, payload: parsed.data } as SSEAction);
+            }
           }
         }
       }

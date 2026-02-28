@@ -1,14 +1,17 @@
 import asyncio
+import logging
 import time
 from uuid import uuid4
 from fastapi import APIRouter, Request, HTTPException, Query
 from sse_starlette.sse import EventSourceResponse
 
 from .schemas import AnalyzeRequest
-from .streaming import sse_event, sse_error
+from .streaming import sse_event, sse_error, sse_progress
 from models.gemma import OllamaUnavailableError, OllamaParseError
-from models.mlx_vlm_client import MlxVlmParseError
+from models.mlx_vlm_client import MlxVlmParseError, MlxVlmTimeoutError
 from models.freecad_client import FreecadConnectionError
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -143,7 +146,9 @@ async def analyze(request: Request, body: AnalyzeRequest):
         timings = {}
 
         try:
-            # Layer 1: Student (Gemma 3n via mlx-vlm) + CAD extraction in parallel
+            # Step 1/5: Feature extraction
+            yield sse_progress("student", "Extracting features with Gemma 3n...", 1, 5)
+            logger.info("Layer 1 (student): starting feature extraction")
             t0 = time.monotonic()
 
             async def _extract_vision():
@@ -153,6 +158,7 @@ async def analyze(request: Request, body: AnalyzeRequest):
                         image_base64=body.image_base64,
                     )
                 except MlxVlmParseError:
+                    logger.warning("Layer 1: parse error, retrying with explicit JSON instruction")
                     return await vlm.extract_features(
                         text="Return ONLY valid JSON. " + body.description,
                         image_base64=body.image_base64,
@@ -176,6 +182,7 @@ async def analyze(request: Request, body: AnalyzeRequest):
                 )
 
             timings["student_ms"] = int((time.monotonic() - t0) * 1000)
+            logger.info("Layer 1 (student): completed in %dms", timings["student_ms"])
 
             # Merge vision + CAD
             features = _merge_vision_and_cad(vision_features, cad_context_raw)
@@ -199,14 +206,18 @@ async def analyze(request: Request, body: AnalyzeRequest):
                 "source": "freecad_rpc",
             })
 
-            # Layer 2: Classifier (Gemma 270M) -- GD&T Classification
+            # Step 2/5: Classification
+            yield sse_progress("classifier", "Classifying GD&T controls...", 2, 5)
+            logger.info("Layer 2 (classifier): starting GD&T classification")
             t0 = time.monotonic()
             finetuned_model = "gemma3:1b"
             try:
                 classification = await ollama.classify_gdt(features, model=finetuned_model)
             except OllamaParseError:
+                logger.warning("Layer 2: parse error, retrying classification")
                 classification = await ollama.classify_gdt(features, model=finetuned_model)
             timings["classifier_ms"] = int((time.monotonic() - t0) * 1000)
+            logger.info("Layer 2 (classifier): completed in %dms", timings["classifier_ms"])
 
             # Fine-tuning comparison mode
             if body.compare:
@@ -226,7 +237,9 @@ async def analyze(request: Request, body: AnalyzeRequest):
             datum_scheme = _derive_datum_scheme(classification, features)
             yield sse_event("datum_recommendation", {"datum_scheme": datum_scheme})
 
-            # Layers 3+4: Matcher + Brain (parallel)
+            # Step 3/5: Standards matching
+            yield sse_progress("matcher", "Matching ASME Y14.5 standards...", 3, 5)
+            logger.info("Layers 3+4 (matcher+brain): starting standards matching")
             t0 = time.monotonic()
             matcher_query = _build_matcher_query(features, classification)
             standards, tolerances = await asyncio.gather(
@@ -234,8 +247,11 @@ async def analyze(request: Request, body: AnalyzeRequest):
                 _safe_get_tolerances(manufacturing, classification, features),
             )
             timings["matcher_ms"] = int((time.monotonic() - t0) * 1000)
+            logger.info("Layers 3+4 (matcher+brain): completed in %dms", timings["matcher_ms"])
 
-            # Layer 5: Worker (Gemma 3n via mlx-vlm) -- Output Generation
+            # Step 4/5: Output generation
+            yield sse_progress("worker", "Generating GD&T callouts...", 4, 5)
+            logger.info("Layer 5 (worker): starting output generation")
             t0 = time.monotonic()
             try:
                 worker_result = await vlm.generate_output(
@@ -246,6 +262,7 @@ async def analyze(request: Request, body: AnalyzeRequest):
                     tolerances=tolerances,
                 )
             except MlxVlmParseError:
+                logger.warning("Layer 5: parse error, retrying output generation")
                 worker_result = await vlm.generate_output(
                     features=features,
                     classification=classification,
@@ -254,7 +271,10 @@ async def analyze(request: Request, body: AnalyzeRequest):
                     tolerances=tolerances,
                 )
             timings["worker_ms"] = int((time.monotonic() - t0) * 1000)
+            logger.info("Layer 5 (worker): completed in %dms", timings["worker_ms"])
 
+            # Step 5/5: Finalizing
+            yield sse_progress("finalize", "Finalizing results...", 5, 5)
             yield sse_event("gdt_callouts", {
                 "callouts": worker_result.get("callouts", []),
             })
@@ -283,9 +303,13 @@ async def analyze(request: Request, body: AnalyzeRequest):
                 },
             })
 
+        except MlxVlmTimeoutError as e:
+            logger.error("Pipeline timeout: %s", e)
+            yield sse_error(str(e), layer="vlm")
         except OllamaUnavailableError as e:
             yield sse_error(str(e), layer="ollama")
         except Exception as e:
+            logger.error("Pipeline error: %s", e, exc_info=True)
             yield sse_error(f"Pipeline error: {e}", layer="unknown")
 
     return EventSourceResponse(event_generator())

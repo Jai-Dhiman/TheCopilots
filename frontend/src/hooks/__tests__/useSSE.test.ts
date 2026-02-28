@@ -55,7 +55,7 @@ describe('analysisReducer', () => {
     expect(state.datumScheme).toEqual(datum_scheme);
   });
 
-  it('handles analysis_complete event', () => {
+  it('handles analysis_complete event and clears step fields', () => {
     const metadata = {
       analysis_id: 'test-123',
       inference_device: 'local',
@@ -69,11 +69,25 @@ describe('analysisReducer', () => {
       connectivity_required: false
     };
     const state = analysisReducer(
-      { ...initialState, status: 'streaming' },
+      { ...initialState, status: 'streaming', currentStep: 4, currentStepMessage: 'Generating...', totalSteps: 5 },
       { type: 'analysis_complete', payload: { analysis_id: 'test-123', metadata } }
     );
     expect(state.status).toBe('complete');
     expect(state.metadata).toEqual(metadata);
+    expect(state.currentStep).toBeNull();
+    expect(state.currentStepMessage).toBeNull();
+    expect(state.totalSteps).toBeNull();
+  });
+
+  it('handles progress event', () => {
+    const state = analysisReducer(
+      { ...initialState, status: 'connecting' },
+      { type: 'progress', payload: { layer: 'student', message: 'Extracting features...', step: 1, total_steps: 5 } }
+    );
+    expect(state.status).toBe('streaming');
+    expect(state.currentStep).toBe(1);
+    expect(state.currentStepMessage).toBe('Extracting features...');
+    expect(state.totalSteps).toBe(5);
   });
 
   it('handles error', () => {

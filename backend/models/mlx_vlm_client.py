@@ -1,9 +1,17 @@
 import asyncio
 import base64
 import json
+import logging
 import os
 import re
 import tempfile
+import time
+
+logger = logging.getLogger(__name__)
+
+INFERENCE_TIMEOUT = 120
+FEATURE_EXTRACTION_MAX_TOKENS = 512
+OUTPUT_GENERATION_MAX_TOKENS = 1024
 
 # Lazy sentinel -- actual imports happen in _ensure_imports().
 # Module-level names exist so tests can patch them at "models.mlx_vlm_client.<name>".
@@ -36,6 +44,11 @@ class MlxVlmParseError(Exception):
     pass
 
 
+class MlxVlmTimeoutError(Exception):
+    """Raised when mlx-vlm inference exceeds the timeout."""
+    pass
+
+
 class MlxVlmClient:
     MODEL_ID = "mlx-community/gemma-3n-E4B-it-4bit"
 
@@ -62,7 +75,9 @@ class MlxVlmClient:
         prompt = FEATURE_EXTRACTION_SYSTEM + "\n\n" + text
         image_paths, temp_path = self._prepare_image(image_base64)
         try:
-            raw = await self._generate(prompt, image_paths)
+            raw = await self._generate(
+                prompt, image_paths, max_tokens=FEATURE_EXTRACTION_MAX_TOKENS
+            )
         finally:
             if temp_path:
                 os.unlink(temp_path)
@@ -83,26 +98,42 @@ class MlxVlmClient:
             features, classification, datum_scheme, standards, tolerances
         )
         prompt = WORKER_SYSTEM + "\n\n" + user_content
-        raw = await self._generate(prompt, image_paths=None)
+        raw = await self._generate(
+            prompt, image_paths=None, max_tokens=OUTPUT_GENERATION_MAX_TOKENS
+        )
         return self._extract_json(raw)
 
     async def _generate(
-        self, prompt: str, image_paths: list[str] | None
+        self, prompt: str, image_paths: list[str] | None, max_tokens: int = 1024
     ) -> str:
         """Run mlx_vlm.generate in a thread to avoid blocking the event loop."""
         num_images = len(image_paths) if image_paths else 0
         formatted = apply_chat_template(
             self.processor, self.config, prompt, num_images=num_images
         )
-        result = await asyncio.to_thread(
-            mlx_generate,
-            self.model,
-            self.processor,
-            formatted,
-            image_paths,
-            verbose=False,
-            max_tokens=1024,
-        )
+        t0 = time.monotonic()
+        logger.info("mlx-vlm inference starting (max_tokens=%d)", max_tokens)
+        try:
+            result = await asyncio.wait_for(
+                asyncio.to_thread(
+                    mlx_generate,
+                    self.model,
+                    self.processor,
+                    formatted,
+                    image_paths,
+                    verbose=False,
+                    max_tokens=max_tokens,
+                ),
+                timeout=INFERENCE_TIMEOUT,
+            )
+        except asyncio.TimeoutError:
+            elapsed = time.monotonic() - t0
+            logger.error("mlx-vlm inference timed out after %.1fs", elapsed)
+            raise MlxVlmTimeoutError(
+                f"Inference timed out after {INFERENCE_TIMEOUT}s"
+            )
+        elapsed = time.monotonic() - t0
+        logger.info("mlx-vlm inference completed in %.1fs", elapsed)
         return result.text
 
     def _prepare_image(

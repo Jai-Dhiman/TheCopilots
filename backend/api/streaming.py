@@ -9,6 +9,7 @@ SSE_EVENT_TYPES = [
     "reasoning",
     "warnings",
     "analysis_complete",
+    "progress",
     "error",
 ]
 
@@ -18,6 +19,19 @@ def sse_event(event_type: str, data: dict) -> dict:
     return {
         "event": event_type,
         "data": json.dumps(data),
+    }
+
+
+def sse_progress(layer: str, message: str, step: int, total_steps: int) -> dict:
+    """Create a progress SSE event for pipeline feedback."""
+    return {
+        "event": "progress",
+        "data": json.dumps({
+            "layer": layer,
+            "message": message,
+            "step": step,
+            "total_steps": total_steps,
+        }),
     }
 
 

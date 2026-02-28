@@ -1,5 +1,5 @@
 import json
-from api.streaming import sse_event, sse_error, SSE_EVENT_TYPES
+from api.streaming import sse_event, sse_error, sse_progress, SSE_EVENT_TYPES
 
 
 def test_sse_event_types_defined():
@@ -10,6 +10,7 @@ def test_sse_event_types_defined():
     assert "reasoning" in SSE_EVENT_TYPES
     assert "warnings" in SSE_EVENT_TYPES
     assert "analysis_complete" in SSE_EVENT_TYPES
+    assert "progress" in SSE_EVENT_TYPES
     assert "error" in SSE_EVENT_TYPES
 
 
@@ -32,3 +33,13 @@ def test_sse_error_no_layer():
     event = sse_error("Unknown failure")
     data = json.loads(event["data"])
     assert "layer" not in data
+
+
+def test_sse_progress_format():
+    event = sse_progress("student", "Extracting features...", 1, 5)
+    assert event["event"] == "progress"
+    data = json.loads(event["data"])
+    assert data["layer"] == "student"
+    assert data["message"] == "Extracting features..."
+    assert data["step"] == 1
+    assert data["total_steps"] == 5

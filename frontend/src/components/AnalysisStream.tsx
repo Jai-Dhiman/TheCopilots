@@ -6,6 +6,24 @@ interface Props {
   state: AnalysisState;
 }
 
+function ProgressBanner({ step, total, message }: { step: number; total: number; message: string }) {
+  const pct = Math.round((step / total) * 100);
+  return (
+    <div className="mb-6 bg-surface-800 border border-surface-600 p-4">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm text-surface-200 font-mono">{message}</span>
+        <span className="text-xs text-surface-400 font-mono">{step}/{total}</span>
+      </div>
+      <div className="w-full h-1.5 bg-surface-700 overflow-hidden">
+        <div
+          className="h-full bg-accent-500 transition-all duration-300"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 const SHIMMER_WIDTHS = [85, 72, 95, 78, 90];
 
 function Shimmer({ lines = 3 }: { lines?: number }) {
@@ -121,6 +139,10 @@ export function AnalysisStream({ state }: Props) {
 
   return (
     <div className="p-6 overflow-y-auto h-full">
+      {state.currentStep !== null && state.totalSteps !== null && state.currentStepMessage !== null && (
+        <ProgressBanner step={state.currentStep} total={state.totalSteps} message={state.currentStepMessage} />
+      )}
+
       {/* Features */}
       <Section
         title="Extracted Features"

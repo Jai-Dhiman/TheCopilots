@@ -16,6 +16,14 @@ export default defineConfig({
         target: 'http://localhost:8000',
         changeOrigin: true,
         timeout: 300000,
+        configure: (proxy) => {
+          proxy.on('proxyRes', (proxyRes, req, res) => {
+            if (proxyRes.headers['content-type']?.includes('text/event-stream')) {
+              res.setHeader('x-accel-buffering', 'no');
+              res.setHeader('cache-control', 'no-cache');
+            }
+          });
+        },
       },
     },
   },

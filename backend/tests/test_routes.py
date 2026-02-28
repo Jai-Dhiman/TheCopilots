@@ -113,6 +113,7 @@ async def test_analyze_returns_sse_stream():
         events = _parse_sse(resp.text)
         event_types = [e["event"] for e in events]
 
+        assert "progress" in event_types
         assert "feature_extraction" in event_types
         assert "cad_context" in event_types
         assert "datum_recommendation" in event_types

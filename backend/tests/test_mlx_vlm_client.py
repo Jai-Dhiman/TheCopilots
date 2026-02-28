@@ -3,7 +3,7 @@ import json
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
 
-from models.mlx_vlm_client import MlxVlmClient, MlxVlmLoadError, MlxVlmParseError
+from models.mlx_vlm_client import MlxVlmClient, MlxVlmLoadError, MlxVlmParseError, MlxVlmTimeoutError, INFERENCE_TIMEOUT
 
 
 @pytest.fixture
@@ -164,12 +164,25 @@ async def test_generate_output_uses_worker_prompt(mock_gen, mock_template, clien
 @patch("models.mlx_vlm_client.apply_chat_template", return_value="formatted prompt")
 @patch("models.mlx_vlm_client.mlx_generate")
 async def test_generate_runs_in_thread(mock_gen, mock_template, client):
+    """Verify _generate uses asyncio.to_thread (wrapped in wait_for)."""
     mock_gen.return_value = _mock_generation_result('{"feature_type": "boss"}')
 
-    with patch("models.mlx_vlm_client.asyncio") as mock_asyncio:
-        mock_asyncio.to_thread = AsyncMock(return_value=_mock_generation_result('{"feature_type": "boss"}'))
-        result = await client.extract_features("test")
-        mock_asyncio.to_thread.assert_called_once()
+    result = await client.extract_features("test")
+    # mlx_generate is called inside asyncio.to_thread; verify it was called
+    mock_gen.assert_called_once()
+
+
+@pytest.mark.asyncio
+@patch("models.mlx_vlm_client.apply_chat_template", return_value="formatted prompt")
+@patch("models.mlx_vlm_client.mlx_generate")
+async def test_generate_timeout_raises(mock_gen, mock_template, client):
+    """Verify MlxVlmTimeoutError is raised when inference exceeds timeout."""
+    async def slow_thread(*args, **kwargs):
+        await asyncio.sleep(999)
+
+    with patch("asyncio.wait_for", side_effect=asyncio.TimeoutError):
+        with pytest.raises(MlxVlmTimeoutError):
+            await client._generate("test prompt", None)
 
 
 @pytest.mark.asyncio

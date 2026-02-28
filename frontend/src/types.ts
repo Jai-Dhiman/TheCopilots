@@ -85,6 +85,9 @@ export interface AnalysisState {
   warnings: string[] | null;
   metadata: AnalysisMetadata | null;
   error: string | null;
+  currentStep: number | null;
+  currentStepMessage: string | null;
+  totalSteps: number | null;
 }
 
 export type SSEAction =
@@ -96,5 +99,6 @@ export type SSEAction =
   | { type: 'reasoning'; payload: ReasoningData }
   | { type: 'warnings'; payload: { warnings: string[] } }
   | { type: 'analysis_complete'; payload: { analysis_id: string; metadata: AnalysisMetadata } }
+  | { type: 'progress'; payload: { layer: string; message: string; step: number; total_steps: number } }
   | { type: 'error'; payload: string }
   | { type: 'reset' };

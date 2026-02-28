@@ -16,9 +16,10 @@ interface Props {
   status: AnalysisStatus;
   metadata: AnalysisMetadata | null;
   cadContext: CADContext | null;
+  currentStepMessage: string | null;
 }
 
-export function StatusBar({ status, metadata, cadContext }: Props) {
+export function StatusBar({ status, metadata, cadContext, currentStepMessage }: Props) {
   const isProcessing = status === 'streaming' || status === 'connecting';
 
   return (
@@ -30,7 +31,7 @@ export function StatusBar({ status, metadata, cadContext }: Props) {
           pulse={isProcessing}
         />
         <span className="text-surface-300 uppercase">
-          {isProcessing ? 'PROCESSING...' : 'READY'}
+          {isProcessing ? (currentStepMessage ?? 'PROCESSING...') : 'READY'}
         </span>
         <span className="text-surface-600">|</span>
         <span>Gemma 3n E4B int4 (mlx-vlm)</span>
