@@ -58,6 +58,10 @@ class OllamaClient:
             raise OllamaUnavailableError(
                 f"Ollama timed out on model {model}"
             ) from e
+        except httpx.HTTPStatusError as e:
+            raise OllamaUnavailableError(
+                f"Ollama returned {e.response.status_code} for model {model}"
+            ) from e
 
         return resp.json()
 
@@ -72,19 +76,6 @@ class OllamaClient:
                 f"Model {model} returned invalid JSON: {content[:200]}"
             ) from e
 
-    async def extract_features(
-        self, text: str, image_base64: str | None = None
-    ) -> dict:
-        """Layer 1: Student -- Gemma 3n feature extraction."""
-        from .prompts import FEATURE_EXTRACTION_SYSTEM
-
-        messages = [
-            {"role": "system", "content": FEATURE_EXTRACTION_SYSTEM},
-            {"role": "user", "content": text},
-        ]
-        images = [image_base64] if image_base64 else None
-        return await self.chat_json("gemma3n:e2b", messages, images=images)
-
     async def classify_gdt(
         self, features: dict, model: str = "gemma3:1b"
     ) -> dict:
@@ -96,28 +87,6 @@ class OllamaClient:
             {"role": "user", "content": json.dumps(features)},
         ]
         return await self.chat_json(model, messages)
-
-    async def generate_output(
-        self,
-        features: dict,
-        classification: dict,
-        datum_scheme: dict,
-        standards: list[dict],
-        tolerances: dict,
-    ) -> dict:
-        """Layer 5: Worker -- Gemma 3n output generation."""
-        from .prompts import WORKER_SYSTEM, build_worker_user_prompt
-
-        messages = [
-            {"role": "system", "content": WORKER_SYSTEM},
-            {
-                "role": "user",
-                "content": build_worker_user_prompt(
-                    features, classification, datum_scheme, standards, tolerances
-                ),
-            },
-        ]
-        return await self.chat_json("gemma3n:e2b", messages)
 
     async def close(self):
         await self.client.aclose()

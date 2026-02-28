@@ -44,7 +44,7 @@ export default function App() {
       </main>
 
       {/* Status bar */}
-      <StatusBar status={state.status} metadata={state.metadata} />
+      <StatusBar status={state.status} metadata={state.metadata} cadContext={state.cadContext} />
     </div>
   );
 }

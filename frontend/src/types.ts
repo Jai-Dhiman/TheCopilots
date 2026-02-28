@@ -1,24 +1,32 @@
 // frontend/src/types.ts
 // Mirrors backend/api/schemas.py -- coordinate before changing
 
+export interface CADContext {
+  document_name?: string | null;
+  objects: Record<string, unknown>[];
+  sketches: Record<string, unknown>[];
+  materials: Record<string, unknown>[];
+  bounding_box?: Record<string, number> | null;
+  source: string;
+  connected: boolean;
+}
+
 export interface AnalyzeRequest {
   description: string;
-  image?: string; // base64 encoded
+  image_base64?: string;
   manufacturing_process?: string;
   material?: string;
-  context?: {
-    assembly_info?: string;
-    company_rules?: string;
-  };
+  compare?: boolean;
+  cad_context?: CADContext | null;
 }
 
 export interface FeatureRecord {
   feature_type: string;
-  count?: number;
-  geometry: Record<string, string>;
-  parent_surface?: string;
-  material_detected?: string;
-  process_detected?: string;
+  geometry: Record<string, number | string | null>;
+  material: string;
+  manufacturing_process: string;
+  mating_condition?: string | null;
+  parent_surface?: string | null;
 }
 
 export interface DatumRecord {
@@ -70,6 +78,7 @@ export type AnalysisStatus = 'idle' | 'connecting' | 'streaming' | 'complete' | 
 export interface AnalysisState {
   status: AnalysisStatus;
   features: FeatureRecord[] | null;
+  cadContext: CADContext | null;
   datumScheme: DatumScheme | null;
   callouts: GDTCallout[] | null;
   reasoning: ReasoningData | null;
@@ -80,7 +89,8 @@ export interface AnalysisState {
 
 export type SSEAction =
   | { type: 'connecting' }
-  | { type: 'feature_extraction'; payload: { features: FeatureRecord[]; material_detected?: string; process_detected?: string } }
+  | { type: 'feature_extraction'; payload: { features: FeatureRecord[]; material_detected?: string | null; process_detected?: string | null } }
+  | { type: 'cad_context'; payload: CADContext }
   | { type: 'datum_recommendation'; payload: { datum_scheme: DatumScheme } }
   | { type: 'gdt_callouts'; payload: { callouts: GDTCallout[] } }
   | { type: 'reasoning'; payload: ReasoningData }

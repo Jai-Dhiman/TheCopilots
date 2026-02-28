@@ -1,5 +1,6 @@
 from api.schemas import (
     AnalyzeRequest,
+    CADContext,
     Geometry,
     FeatureRecord,
     GDTClassification,
@@ -11,11 +12,40 @@ from api.schemas import (
 )
 
 
+def test_cad_context_defaults():
+    ctx = CADContext()
+    assert ctx.document_name is None
+    assert ctx.objects == []
+    assert ctx.sketches == []
+    assert ctx.materials == []
+    assert ctx.bounding_box is None
+    assert ctx.source == "freecad_rpc"
+
+
+def test_cad_context_full():
+    ctx = CADContext(
+        document_name="bracket",
+        objects=[{"name": "Pad", "type": "PartDesign::Pad"}],
+        materials=[{"body": "Body", "material": "AL6061-T6"}],
+        bounding_box={"x_min": 0, "x_max": 50},
+    )
+    assert ctx.document_name == "bracket"
+    assert len(ctx.objects) == 1
+
+
+def test_analyze_request_with_cad_context():
+    ctx = CADContext(document_name="test")
+    req = AnalyzeRequest(description="boss", cad_context=ctx)
+    assert req.cad_context is not None
+    assert req.cad_context.document_name == "test"
+
+
 def test_analyze_request_minimal():
     req = AnalyzeRequest(description="12mm boss on mounting face")
     assert req.description == "12mm boss on mounting face"
     assert req.image_base64 is None
     assert req.compare is False
+    assert req.cad_context is None
 
 
 def test_analyze_request_full():

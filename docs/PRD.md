@@ -36,9 +36,9 @@ ToleranceAI is an on-device AI copilot that generates ASME Y14.5-2018 compliant 
 
 ### FR-2: Feature Extraction from Image (P0)
 
-**Description:** The system accepts a photo of a part, sketch, or drawing and extracts the same structured feature data as FR-1.
+**Description:** The system accepts a photo of a part, sketch, drawing, or screen capture of a FreeCAD/CAD session and extracts the same structured feature data as FR-1.
 
-**Input:** JPEG/PNG image file (camera photo or screenshot)
+**Input:** JPEG/PNG image file (camera photo or screenshot). Screen capture frame from FreeCAD via browser getDisplayMedia() API.
 
 **Output:** Same structured feature record as FR-1.
 
@@ -47,6 +47,7 @@ ToleranceAI is an on-device AI copilot that generates ASME Y14.5-2018 compliant 
 - Correctly identifies primary feature type from a clear photo of a simple part (bracket, plate, shaft)
 - Estimates approximate dimensions when scale reference is visible
 - Handles typical phone camera quality (lighting variation, slight blur, perspective distortion)
+- Correctly identifies features from a FreeCAD 3D model screenshot (rendered CAD view with visible geometry)
 - Responds within 500ms
 - Gracefully handles ambiguous images with confidence scores and clarifying questions
 
@@ -172,7 +173,19 @@ ToleranceAI is an on-device AI copilot that generates ASME Y14.5-2018 compliant 
 - `/api/tolerances?process=&material=` returns tolerance capability data
 - All lookups respond within 50ms
 
-### FR-11: SolidWorks MCP Input Adapter (P3 — Architecture Only)
+### FR-11a: FreeCAD Screen Capture Input (P1)
+
+**Description:** The frontend captures frames from a FreeCAD window via the browser's getDisplayMedia() API and sends them to the analysis pipeline as image input.
+
+**Acceptance Criteria:**
+
+- Browser screen capture permission flow works (getDisplayMedia picker)
+- Live preview of captured FreeCAD window displays in the left panel
+- "Capture & Analyze" grabs a single frame as JPEG blob and sends to POST /api/analyze
+- Frame quality is sufficient for Gemma 3n feature extraction (JPEG quality 0.85+)
+- Captured frames never leave the device
+
+### FR-11b: SolidWorks MCP Input Adapter (P3 — Architecture Only)
 
 **Description:** An input adapter that reads SolidWorks model data via MCP and normalizes it into the pipeline's feature input format.
 
@@ -213,9 +226,9 @@ End-to-end analysis completes in under 1 second on M4 MacBook Air 32GB. First st
 
 ### NFR-3: Model Memory (P0)
 
-Total model RAM usage under 3GB (Gemma 3n ~2GB + Gemma 270M ~300MB + MiniLM ~90MB).
+Total model RAM usage under 5GB (Gemma 3n E4B ~3-4GB + Gemma 270M ~300MB + MiniLM ~90MB).
 
-**Verification:** Monitor RSS memory during inference. Must leave >10GB free on 32GB system for SolidWorks (future) and OS overhead.
+**Verification:** Monitor RSS memory during inference. Must leave >8GB free on 32GB system for SolidWorks (future) and OS overhead.
 
 ### NFR-4: ASME Y14.5-2018 Compliance (P0)
 

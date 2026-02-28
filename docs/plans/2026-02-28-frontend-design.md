@@ -35,8 +35,10 @@ frontend/
     types.ts                    # mirrors backend/api/schemas.py
     hooks/
       useSSE.ts                 # fetch + ReadableStream + useReducer
+      useScreenCapture.ts       # getDisplayMedia + frame extraction (NEW)
     components/
-      FeatureInput.tsx           # left panel: textarea, presets, analyze button
+      FeatureInput.tsx           # left panel: tabs (Text | CAD Capture), presets, analyze
+      ScreenCapture.tsx          # screen capture preview + capture button (NEW)
       AnalysisStream.tsx         # right panel: progressive section renderer
       GDTCallout.tsx             # FCF box renderer (CSS Grid)
       DatumScheme.tsx            # A > B > C datum hierarchy (P1)
@@ -53,6 +55,9 @@ App.tsx
   Header (inline)
   main (grid: 35% / 65%)
     FeatureInput              props: { onAnalyze, isStreaming }
+      Tab: "Text"             textarea + presets (existing)
+      Tab: "CAD Capture"      ScreenCapture component (NEW)
+        ScreenCapture         props: { onCapture, onDisconnect }
     AnalysisStream            props: { state: AnalysisState }
       FeaturesSection         (inline — extracted features list)
       DatumScheme             props: { scheme: DatumScheme | null }
@@ -96,6 +101,31 @@ Mechanics:
 
 Transitions: `idle -> connecting -> streaming -> complete | error`
 
+## useScreenCapture Hook (NEW — P1)
+
+```typescript
+interface UseScreenCaptureReturn {
+  status: 'disconnected' | 'connecting' | 'connected';
+  videoRef: RefObject<HTMLVideoElement>;
+  connect: () => Promise<void>;        // triggers getDisplayMedia()
+  captureFrame: () => Blob | null;     // grabs frame from video stream as JPEG
+  disconnect: () => void;              // stops MediaStream tracks
+}
+```
+
+Mechanics:
+- `connect()` calls `navigator.mediaDevices.getDisplayMedia({ video: true })`, attaches stream to hidden `<video>` element
+- `captureFrame()` draws video frame onto hidden `<canvas>`, exports as JPEG blob (quality 0.85)
+- `disconnect()` stops all MediaStream tracks, resets state
+- Cleans up stream on unmount via useEffect cleanup
+
+## ScreenCapture Component (NEW — P1)
+
+Renders inside the "CAD Capture" tab of FeatureInput:
+- Disconnected state: "Connect to CAD" button (centered, prominent)
+- Connected state: `<video>` preview (live feed of captured window), "Capture & Analyze" button, "Disconnect" button
+- P2 watch mode: "Auto-analyze" toggle, pulsing "Watching..." indicator, cooldown timer
+
 ## GDTCallout Component (Core Visual)
 
 CSS Grid FCF box renderer:
@@ -122,12 +152,20 @@ Font: JetBrains Mono / monospace. Border: 2px solid. Title attributes on all Uni
 
 ## FeatureInput Component
 
-Left panel (~35% width):
+Left panel (~35% width), **tabbed interface**:
+
+**Tab 1: "Text"** (P0)
 - `<textarea>` with monospace font, placeholder "Describe your part feature..."
 - Row of preset buttons: "Perpendicular Boss", "Hole Pattern", "Flat Surface", "Shaft", "Bracket Photo"
 - Each preset populates textarea with acceptance test input text
 - "Analyze" button — disabled + loading state during streaming
-- P1: image upload zone with preview
+
+**Tab 2: "CAD Capture"** (P1)
+- "Connect to CAD" button → triggers `navigator.mediaDevices.getDisplayMedia({ video: true })`
+- Once connected: live `<video>` preview of captured FreeCAD window
+- "Capture & Analyze" button → grabs frame via hidden `<canvas>`, exports JPEG blob, sends to `/api/analyze`
+- "Disconnect" button → stops MediaStream tracks, returns to disconnected state
+- P2: "Auto-analyze" toggle for watch mode (capture every 3s, pixel-diff change detection)
 
 ## AnalysisStream Component
 
@@ -145,7 +183,7 @@ When `status === 'idle'`: empty state message.
 ## StatusBar Component
 
 Fixed bottom bar:
-- Left: model names ("Gemma 3n E2B int4 + Gemma 3 270M FT")
+- Left: model names ("Gemma 3n E4B int4 (mlx-vlm) + Gemma 3 270M FT")
 - Center: per-layer latency when metadata arrives ("Student: 290ms | Classifier: 78ms | Matcher: 42ms | Worker: 425ms | Total: 847ms")
 - Right: green dot + "Local" + "0 cloud calls"
 
@@ -251,11 +289,15 @@ P0 (must work for demo):
 - Dark theme, professional look
 
 P1 (if time):
-- Image upload with preview
+- FreeCAD screen capture tab (getDisplayMedia + frame capture + analyze)
+- Image upload with preview (alternative to screen capture)
 - DatumScheme visual hierarchy
 - Per-layer latency breakdown in StatusBar
 - Warnings section
 - ASME reference badges in ReasoningPanel
+
+P2 (stretch):
+- Watch mode: auto-analyze on FreeCAD screen changes (pixel-diff, 3s cooldown)
 
 ## Verification
 

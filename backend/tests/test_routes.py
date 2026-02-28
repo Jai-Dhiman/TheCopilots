@@ -11,9 +11,9 @@ def _make_app():
     app = FastAPI()
     app.include_router(router, prefix="/api")
 
-    # Mock Ollama client
-    ollama = AsyncMock()
-    ollama.extract_features = AsyncMock(return_value={
+    # Mock mlx-vlm client (student + worker layers)
+    vlm = AsyncMock()
+    vlm.extract_features = AsyncMock(return_value={
         "feature_type": "boss",
         "geometry": {"diameter": 12.0, "height": 8.0, "unit": "mm"},
         "material": "AL6061-T6",
@@ -21,17 +21,7 @@ def _make_app():
         "mating_condition": "bearing_bore_concentric",
         "parent_surface": "planar_mounting_face",
     })
-    ollama.classify_gdt = AsyncMock(return_value={
-        "primary_control": "perpendicularity",
-        "symbol": "\u22a5",
-        "symbol_name": "perpendicularity",
-        "tolerance_class": "tight",
-        "datum_required": True,
-        "modifier": None,
-        "reasoning_key": "bearing_alignment",
-        "confidence": 0.92,
-    })
-    ollama.generate_output = AsyncMock(return_value={
+    vlm.generate_output = AsyncMock(return_value={
         "callouts": [{
             "feature": "boss",
             "symbol": "\u22a5",
@@ -49,7 +39,20 @@ def _make_app():
         "standards_references": ["ASME Y14.5-2018 7.2"],
         "warnings": ["Consider position callout for bore"],
     })
-    ollama.health_check = AsyncMock(return_value={"models": [{"name": "gemma3n:e2b"}]})
+
+    # Mock Ollama client (classifier only)
+    ollama = AsyncMock()
+    ollama.classify_gdt = AsyncMock(return_value={
+        "primary_control": "perpendicularity",
+        "symbol": "\u22a5",
+        "symbol_name": "perpendicularity",
+        "tolerance_class": "tight",
+        "datum_required": True,
+        "modifier": None,
+        "reasoning_key": "bearing_alignment",
+        "confidence": 0.92,
+    })
+    ollama.health_check = AsyncMock(return_value={"models": [{"name": "gemma3:1b"}]})
 
     # Mock embedder
     embedder = MagicMock()
@@ -75,9 +78,11 @@ def _make_app():
     ])
 
     app.state.ollama = ollama
+    app.state.vlm = vlm
     app.state.embedder = embedder
     app.state.brain_lookup = brain_lookup
     app.state.manufacturing_lookup = manufacturing
+    app.state.freecad = None  # No FreeCAD by default in tests
 
     return app
 
@@ -109,6 +114,7 @@ async def test_analyze_returns_sse_stream():
         event_types = [e["event"] for e in events]
 
         assert "feature_extraction" in event_types
+        assert "cad_context" in event_types
         assert "datum_recommendation" in event_types
         assert "gdt_callouts" in event_types
         assert "reasoning" in event_types

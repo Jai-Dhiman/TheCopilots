@@ -21,7 +21,8 @@ class Embedder:
         if emb_path.exists():
             data = np.load(str(emb_path))
             self.standard_embeddings = data["embeddings"]
-            self.standard_keys = data["keys"].tolist()
+            keys_field = "keys" if "keys" in data else "ids"
+            self.standard_keys = data[keys_field].tolist()
 
     def match_standards(self, query: str, top_k: int = 5) -> list[dict]:
         """Find top-K ASME Y14.5 sections most relevant to the query."""

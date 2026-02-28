@@ -2,6 +2,7 @@ import json
 
 SSE_EVENT_TYPES = [
     "feature_extraction",
+    "cad_context",
     "classification_comparison",
     "datum_recommendation",
     "gdt_callouts",

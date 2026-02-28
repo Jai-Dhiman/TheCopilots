@@ -2,20 +2,22 @@
 
 ## System Overview
 
-ToleranceAI is a 5-layer on-device AI pipeline that mirrors InstaLILY's production architecture. All inference is local — zero cloud calls. The system accepts multimodal input (photo, text, or SolidWorks MCP data), processes it through a fine-tuned student model, matches against ASME Y14.5 standards, enriches with manufacturing knowledge, and outputs formatted GD&T callouts with reasoning via SSE streaming.
+ToleranceAI is a 5-layer on-device AI pipeline that mirrors InstaLILY's production architecture. All inference is local — zero cloud calls. The system accepts multimodal input (photo, text, or FreeCAD screen captures), processes it through a fine-tuned student model, matches against ASME Y14.5 standards, enriches with manufacturing knowledge, and outputs formatted GD&T callouts with reasoning via SSE streaming.
 
 ## The 5-Layer Pipeline
 
 ```
 INPUT ADAPTERS
-  ├── Camera/Photo (Gemma 3n multimodal)
+  ├── Camera/Photo (Gemma 3n multimodal via mlx-vlm)
   ├── Text description (direct)
-  └── SolidWorks MCP (future/Windows — reads feature tree, mates, materials)
+  └── FreeCAD screen capture (getDisplayMedia → frame → Gemma 3n via mlx-vlm)
         │
         ▼
 ┌─────────────────────────────────────────────────────────┐
 │ LAYER 1: STUDENT — Feature Extraction                   │
-│ Model: Gemma 3n E2B int4 via Ollama (~2GB RAM)          │
+│ Model: Gemma 3n E4B int4 via mlx-vlm (~3-4GB RAM)      │
+│ Full multimodal: processes text, images, and video      │
+│   frames via MobileNet-v5 encoder                       │
 │ Input: raw photo or text                                │
 │ Output: structured feature record (JSON)                │
 │   { feature_type, geometry, material, process,          │
@@ -64,7 +66,7 @@ INPUT ADAPTERS
                      ▼
 ┌─────────────────────────────────────────────────────────┐
 │ LAYER 5: WORKER — Output Generation                     │
-│ Model: Gemma 3n E2B int4 (same instance as Layer 1)     │
+│ Model: Gemma 3n E4B int4 via mlx-vlm (same as Layer 1)  │
 │ Input: features + classification + standards + knowledge│
 │ Output: complete GD&T analysis (streamed via SSE)       │
 │   - Feature control frames with standard notation       │
@@ -89,7 +91,7 @@ OUTPUT ADAPTERS
 | Distilled BERT 110M (matcher) | all-MiniLM-L6-v2 (22M) | Cosine similarity matching against standards catalog |
 | InstaBrain (knowledge) | SQLite + JSON | ASME Y14.5 rules, tolerance tables, process capabilities |
 | InstaWorkers (execution) | GD&T Worker pipeline | Autonomous analysis → formatted callouts + reasoning |
-| ERP/CRM connectors | SolidWorks MCP | AI executes inside the engineer's existing tool |
+| ERP/CRM connectors | FreeCAD screen capture + future SolidWorks MCP | AI sees the engineer's CAD screen via browser screen capture. Production path: MCP connector. |
 
 ## API Design
 
@@ -317,13 +319,39 @@ DatumPattern:
 |--------|--------|-------------------|
 | End-to-end latency | < 1 second | First input to `analysis_complete` |
 | First token (streaming) | < 300ms | First SSE event sent |
-| Gemma 3n inference | < 500ms | Student + Worker combined |
+| Gemma 3n inference | via mlx-vlm, ~80-120 tok/s on M4 | Student + Worker combined |
 | Gemma 270M classification | < 100ms | Classifier layer |
 | Standards matching | < 50ms | Embedding cosine similarity |
 | Brain lookup | < 20ms | SQLite query |
 | Cloud calls during inference | 0 | Always |
-| Model RAM (total) | < 3GB | Gemma 3n + 270M + MiniLM |
+| Model RAM (total) | < 5GB | Gemma 3n E4B + 270M + MiniLM |
 | Cold start (first inference) | < 10s | Model loading via Ollama |
+
+## FreeCAD Screen Capture Integration (Hackathon Demo)
+
+### How It Works
+
+The browser's `getDisplayMedia()` API captures the FreeCAD window as a live video stream. Frames are extracted and sent to Gemma 3n E4B for visual feature extraction.
+
+Flow:
+1. User opens FreeCAD with a part model in a separate window
+2. In the web app, user clicks "Connect to CAD" → browser `getDisplayMedia()` picker
+3. User selects the FreeCAD window
+4. Live preview thumbnail appears in the left panel
+5. P0 — Snapshot: User clicks "Capture & Analyze" → single frame extracted → JPEG → POST /api/analyze
+6. P1 — Watch mode: Auto-capture every 3s, pixel-diff change detection, auto-trigger analysis on significant changes
+
+### Why FreeCAD
+
+- Free, open-source, runs locally on macOS
+- No subscription required (unlike SolidWorks, OnShape)
+- Fully offline — no cloud dependency
+- Rich enough UI to look like a real CAD tool in demo
+- Python API available for future deeper integration
+
+### On-Device Story
+
+The screen capture stays entirely local. The captured frames are processed by Gemma 3n E4B running on the same machine via mlx-vlm. No frame data ever leaves the device. This is critical for ITAR-controlled engineering drawings.
 
 ## SolidWorks MCP Integration (Production Path)
 
@@ -391,8 +419,10 @@ This maps to InstaLILY's worker swarm concept and adds an impressive "agentic be
 
 ```
 Ollama (local)
-  ├── gemma3n:e2b (int4, ~2GB)
-  └── gemma3:270m-finetuned (LoRA, ~300MB)
+  └── gemma3:270m-finetuned (LoRA, ~300MB) — classifier only
+
+mlx-vlm (local, Apple Silicon native)
+  └── gemma-3n-E4B-it-4bit (~3-4GB) — student + worker, full multimodal
 
 Python process (FastAPI)
   ├── sentence-transformers (MiniLM, ~90MB)
@@ -402,7 +432,7 @@ Python process (FastAPI)
 Node process (Vite dev server)
   └── React frontend
 
-Total RAM: ~3GB for all models + services
+Total RAM: ~4.5GB for all models + services
 ```
 
 ### Production (Engineer's Workstation)
@@ -412,4 +442,16 @@ Same as above, plus:
   └── SolidWorks MCP server (Python + C#, Windows)
       ├── Reads: feature tree, mates, materials
       └── Writes: GD&T annotations to drawing
+```
+
+### Fine-Tuning (GCP VM — Pre-Hackathon)
+
+```
+NVIDIA RTX PRO 6000 Blackwell (102GB VRAM)
+  ├── LoRA fine-tune Gemma 3 270M on GD&T classification
+  ├── Generate synthetic training data evaluation
+  └── Pre-compute standard embeddings
+
+VM: 104.197.52.110 (hackathon user)
+Not used during demo — training artifacts deployed to M4 laptop.
 ```

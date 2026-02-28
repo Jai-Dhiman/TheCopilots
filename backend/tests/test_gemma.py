@@ -73,36 +73,6 @@ async def test_chat_raises_on_timeout(ollama):
 
 
 @pytest.mark.asyncio
-async def test_extract_features_calls_correct_model(ollama):
-    mock_content = {
-        "feature_type": "boss",
-        "geometry": {"diameter": 12.0},
-        "material": "AL6061-T6",
-        "manufacturing_process": "cnc_milling",
-        "mating_condition": None,
-        "parent_surface": None,
-    }
-    mock_resp = _mock_chat_response(mock_content)
-
-    with patch.object(ollama.client, "post", new_callable=AsyncMock, return_value=mock_resp) as mock_post:
-        await ollama.extract_features("12mm aluminum boss")
-        call_payload = mock_post.call_args[1]["json"]
-        assert call_payload["model"] == "gemma3n:e2b"
-        assert call_payload["format"] == "json"
-
-
-@pytest.mark.asyncio
-async def test_extract_features_with_image(ollama):
-    mock_content = {"feature_type": "boss", "geometry": {}}
-    mock_resp = _mock_chat_response(mock_content)
-
-    with patch.object(ollama.client, "post", new_callable=AsyncMock, return_value=mock_resp) as mock_post:
-        await ollama.extract_features("describe this part", image_base64="base64data")
-        call_payload = mock_post.call_args[1]["json"]
-        assert call_payload["messages"][-1]["images"] == ["base64data"]
-
-
-@pytest.mark.asyncio
 async def test_classify_gdt_uses_specified_model(ollama):
     mock_content = {
         "primary_control": "perpendicularity",

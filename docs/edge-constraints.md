@@ -4,11 +4,12 @@
 
 During inference (the `/api/analyze` pipeline and all related endpoints), the system makes ZERO network calls. All processing is local:
 
-- Gemma 3n E2B int4 → served via Ollama on localhost:11434
+- Gemma 3n E4B int4 → served via mlx-vlm (in-process or local HTTP, Apple Silicon native)
 - Gemma 3 270M fine-tuned → served via Ollama on localhost:11434
 - all-MiniLM-L6-v2 → loaded in-process by sentence-transformers
 - SQLite brain → local file on disk
 - Pre-computed embeddings → local NPZ file
+- FreeCAD screen capture frames → processed locally via browser getDisplayMedia() + canvas, never transmitted externally
 
 ## What "Zero Cloud" Means
 
@@ -31,6 +32,10 @@ During inference (the `/api/analyze` pipeline and all related endpoints), the sy
 - Downloading models via `ollama pull` requires network — this happens once, before demo
 - `pip install` and `npm install` require network — build-time dependency, not runtime
 
+## Fine-Tuning VM (Pre-Hackathon Only)
+
+The GCP VM (104.197.52.110) with NVIDIA RTX PRO 6000 Blackwell (102GB VRAM) is used exclusively for pre-hackathon fine-tuning and training data generation. It is NOT used during inference or demo. The fine-tuned model weights are downloaded to the M4 laptop before the demo.
+
 ## Verification
 
 Run `scripts/validate_pipeline.py` with network disconnected. If it passes, edge constraints are met. If any step fails due to network dependency, that step must be fixed before demo.
@@ -38,11 +43,11 @@ Run `scripts/validate_pipeline.py` with network disconnected. If it passes, edge
 ## Hardware Target
 
 - Apple M4 MacBook Air, 32GB RAM
-- Gemma 3n E2B int4: ~2GB RAM, 30-50 tok/s with ANE
+- Gemma 3n E4B int4: ~3-4GB RAM, ~80-120 tok/s via mlx-vlm on Apple Silicon
 - Gemma 270M fine-tuned: ~300MB RAM
 - MiniLM embedder: ~90MB RAM
-- Total model footprint: <3GB
-- Must leave >10GB free for OS + SolidWorks (future production use case)
+- Total model footprint: <5GB
+- Must leave >8GB free for OS + SolidWorks (future production use case)
 
 ## Latency Budgets
 

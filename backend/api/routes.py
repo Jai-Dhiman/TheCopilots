@@ -7,8 +7,58 @@ from sse_starlette.sse import EventSourceResponse
 from .schemas import AnalyzeRequest
 from .streaming import sse_event, sse_error
 from models.gemma import OllamaUnavailableError, OllamaParseError
+from models.mlx_vlm_client import MlxVlmParseError
+from models.freecad_client import FreecadConnectionError
 
 router = APIRouter()
+
+
+def _merge_vision_and_cad(vision_features: dict, cad_context: dict | None) -> dict:
+    """Merge vision-inferred features with CAD-extracted data.
+
+    CAD exact values override vision guesses where available.
+    Priority: CAD exact values > vision inferred values > defaults.
+    """
+    if not cad_context or cad_context.get("error"):
+        return vision_features
+
+    merged = dict(vision_features)
+
+    # Override geometry with CAD exact dimensions
+    cad_objects = cad_context.get("objects", [])
+    if cad_objects:
+        # Use the first object with dimensions as primary feature source
+        for obj in cad_objects:
+            dims = obj.get("dimensions", {})
+            if not dims:
+                continue
+            geometry = merged.get("geometry", {})
+            if isinstance(geometry, dict):
+                for key in ("diameter", "radius", "length", "width", "height", "depth", "angle"):
+                    if key in dims:
+                        geometry[key] = dims[key]
+                merged["geometry"] = geometry
+
+            # CAD feature type provides parent context when vision didn't detect one
+            if obj.get("parent") and not merged.get("parent_surface"):
+                merged["parent_surface"] = obj["parent"]
+            break
+
+    # Override material with CAD material assignment
+    cad_materials = cad_context.get("materials", [])
+    if cad_materials:
+        merged["material"] = cad_materials[0].get("material", merged.get("material", "unspecified"))
+
+    # Add constraint data (vision can't see these)
+    cad_sketches = cad_context.get("sketches", [])
+    if cad_sketches:
+        constraints = []
+        for sketch in cad_sketches:
+            constraints.extend(sketch.get("constraints", []))
+        if constraints:
+            merged["cad_constraints"] = constraints
+
+    return merged
 
 
 def _derive_datum_scheme(classification: dict, features: dict) -> dict:
@@ -81,26 +131,73 @@ async def analyze(request: Request, body: AnalyzeRequest):
 
     async def event_generator():
         ollama = request.app.state.ollama
+        vlm = getattr(request.app.state, "vlm", None)
         embedder = getattr(request.app.state, "embedder", None)
         manufacturing = getattr(request.app.state, "manufacturing_lookup", None)
+        freecad = getattr(request.app.state, "freecad", None)
+
+        if vlm is None:
+            yield sse_error("mlx-vlm not loaded", layer="vlm")
+            return
 
         timings = {}
 
         try:
-            # Layer 1: Student (Gemma 3n) -- Feature Extraction
+            # Layer 1: Student (Gemma 3n via mlx-vlm) + CAD extraction in parallel
             t0 = time.monotonic()
-            try:
-                features = await ollama.extract_features(
-                    text=body.description,
-                    image_base64=body.image_base64,
+
+            async def _extract_vision():
+                try:
+                    return await vlm.extract_features(
+                        text=body.description,
+                        image_base64=body.image_base64,
+                    )
+                except MlxVlmParseError:
+                    return await vlm.extract_features(
+                        text="Return ONLY valid JSON. " + body.description,
+                        image_base64=body.image_base64,
+                    )
+
+            async def _extract_cad():
+                if freecad is None:
+                    return None
+                try:
+                    return await freecad.extract_cad_context()
+                except (FreecadConnectionError, Exception):
+                    return None
+
+            # Use pre-supplied CAD context from request, or fetch live
+            if body.cad_context is not None:
+                cad_context_raw = body.cad_context.model_dump()
+                vision_features = await _extract_vision()
+            else:
+                vision_features, cad_context_raw = await asyncio.gather(
+                    _extract_vision(), _extract_cad()
                 )
-            except OllamaParseError:
-                features = await ollama.extract_features(
-                    text="Return ONLY valid JSON. " + body.description,
-                    image_base64=body.image_base64,
-                )
+
             timings["student_ms"] = int((time.monotonic() - t0) * 1000)
-            yield sse_event("feature_extraction", features)
+
+            # Merge vision + CAD
+            features = _merge_vision_and_cad(vision_features, cad_context_raw)
+
+            yield sse_event("feature_extraction", {
+                "features": [features],
+                "material_detected": features.get("material"),
+                "process_detected": features.get("manufacturing_process"),
+            })
+
+            # Emit CAD context event
+            cad_connected = cad_context_raw is not None and not (cad_context_raw or {}).get("error")
+            cad_data = cad_context_raw if cad_connected and cad_context_raw else {}
+            yield sse_event("cad_context", {
+                "connected": cad_connected,
+                "document_name": cad_data.get("document_name"),
+                "objects": cad_data.get("objects", []),
+                "sketches": cad_data.get("sketches", []),
+                "materials": cad_data.get("materials", []),
+                "bounding_box": cad_data.get("bounding_box"),
+                "source": "freecad_rpc",
+            })
 
             # Layer 2: Classifier (Gemma 270M) -- GD&T Classification
             t0 = time.monotonic()
@@ -127,7 +224,7 @@ async def analyze(request: Request, body: AnalyzeRequest):
 
             # Derive datum scheme
             datum_scheme = _derive_datum_scheme(classification, features)
-            yield sse_event("datum_recommendation", datum_scheme)
+            yield sse_event("datum_recommendation", {"datum_scheme": datum_scheme})
 
             # Layers 3+4: Matcher + Brain (parallel)
             t0 = time.monotonic()
@@ -138,18 +235,18 @@ async def analyze(request: Request, body: AnalyzeRequest):
             )
             timings["matcher_ms"] = int((time.monotonic() - t0) * 1000)
 
-            # Layer 5: Worker (Gemma 3n) -- Output Generation
+            # Layer 5: Worker (Gemma 3n via mlx-vlm) -- Output Generation
             t0 = time.monotonic()
             try:
-                worker_result = await ollama.generate_output(
+                worker_result = await vlm.generate_output(
                     features=features,
                     classification=classification,
                     datum_scheme=datum_scheme,
                     standards=standards,
                     tolerances=tolerances,
                 )
-            except OllamaParseError:
-                worker_result = await ollama.generate_output(
+            except MlxVlmParseError:
+                worker_result = await vlm.generate_output(
                     features=features,
                     classification=classification,
                     datum_scheme=datum_scheme,
@@ -234,13 +331,29 @@ async def get_tolerances(
 async def health(request: Request):
     """Liveness check -- confirms Ollama + models are loaded."""
     ollama = request.app.state.ollama
+    freecad = getattr(request.app.state, "freecad", None)
     try:
         tags = await ollama.health_check()
         models = [m["name"] for m in tags.get("models", [])]
-        return {
+        result = {
             "status": "healthy",
             "ollama": "connected",
             "models_loaded": models,
         }
+        if freecad is not None:
+            result["freecad"] = "connected" if await freecad.health_check() else "not available"
+        else:
+            result["freecad"] = "not configured"
+        return result
     except OllamaUnavailableError as e:
         return {"status": "degraded", "ollama": str(e), "models_loaded": []}
+
+
+@router.get("/freecad/status")
+async def freecad_status(request: Request):
+    """Check FreeCAD RPC server connectivity."""
+    freecad = getattr(request.app.state, "freecad", None)
+    if freecad is None:
+        return {"connected": False, "reason": "FreeCAD client not configured"}
+    connected = await freecad.health_check()
+    return {"connected": connected}

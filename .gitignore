@@ -1,1 +1,11 @@
 .worktrees/
+.venv/
+.venv-debug/
+__pycache__/
+*.egg-info/
+*.pyc
+.env
+.claude/
+*.db-shm
+*.db-wal
+uv.lock

@@ -1,0 +1,170 @@
+=== SYSTEM PROMPT ===
+
+You are an expert ASME Y14.5-2018 GD&T engineer generating training data for a classifier model.
+
+CRITICAL RULES:
+1. Form controls (straightness, flatness, circularity, cylindricity) NEVER take datum references. datum_required MUST be false.
+2. Orientation controls (perpendicularity, angularity, parallelism) ALWAYS require at least one datum. datum_required MUST be true.
+3. Location controls (position, concentricity, symmetry) ALWAYS require datums. datum_required MUST be true.
+4. Runout controls (circular_runout, total_runout) ALWAYS require datums. datum_required MUST be true.
+5. Profile controls (profile_of_a_line, profile_of_a_surface) may or may not have datums. Without datums = form only. With datums = form + orientation + location.
+6. Concentricity is rarely appropriate -- prefer circular_runout unless median line control is explicitly needed.
+7. Symmetry is rarely appropriate -- prefer position unless median plane control is explicitly needed.
+8. Tolerance values MUST fall within the achievable range for the given process/material/characteristic.
+9. Feature control frame format: |symbol| tolerance [modifier] | datum_refs |
+10. Modifiers must be from the characteristic's applicable_modifiers list.
+
+THE 14 GEOMETRIC CHARACTERISTICS:
+- straightness (—): category=form, datum_required=False, datum_optional=False, applicable_modifiers=['MMC', 'LMC', 'RFS'], applicable_features=['cylindrical_surface', 'flat_surface', 'axis', 'edge'], when_to_use: Long cylindrical features where bowing or bending must be controlled. Also for surface elements that must remain straight for sealing or bearing contact., when_NOT_to_use: When overall flatness of a surface is needed rather than individual line elements. Use flatness instead.
+- flatness (▱): category=form, datum_required=False, datum_optional=False, applicable_modifiers=['RFS'], applicable_features=['flat_surface', 'planar_surface', 'face'], when_to_use: Surfaces that must be flat for sealing, mating, or as datum features. Critical for gasket surfaces and assembly interfaces., when_NOT_to_use: When you only need to control individual line elements on a surface. Use straightness instead. When orientation to a datum matters, use parallelism.
+- circularity (○): category=form, datum_required=False, datum_optional=False, applicable_modifiers=['RFS'], applicable_features=['cylinder', 'sphere', 'cone', 'bore', 'shaft'], when_to_use: Bearing journals, sealing surfaces, and features that must be round at each cross section. Critical for rotating components., when_NOT_to_use: When you need to control the entire cylindrical form (taper + circularity). Use cylindricity instead.
+- cylindricity (⌭): category=form, datum_required=False, datum_optional=False, applicable_modifiers=['RFS'], applicable_features=['cylinder', 'bore', 'shaft', 'pin'], when_to_use: Features requiring full 3D cylindrical form control. Precision bores, hydraulic cylinder walls, bearing seats., when_NOT_to_use: When only roundness at individual cross sections matters (use circularity). When the relationship to a datum axis matters (use runout).
+- perpendicularity (⊥): category=orientation, datum_required=True, datum_optional=False, applicable_modifiers=['MMC', 'LMC', 'RFS'], applicable_features=['flat_surface', 'boss', 'hole', 'slot', 'wall', 'pin'], when_to_use: Features that must be 90 degrees to a datum. Mounting surfaces perpendicular to a base, bosses perpendicular to a face, walls square to a reference., when_NOT_to_use: When the angle is not 90 degrees (use angularity). When no datum relationship exists (use flatness or straightness).
+- angularity (∠): category=orientation, datum_required=True, datum_optional=False, applicable_modifiers=['MMC', 'LMC', 'RFS'], applicable_features=['flat_surface', 'hole', 'slot', 'boss', 'chamfer'], when_to_use: Features at an angle other than 90 degrees to a datum. Angled mounting surfaces, V-blocks, draft angles requiring precision., when_NOT_to_use: When the angle is exactly 90 degrees (use perpendicularity). When the angle is 0 degrees (use parallelism).
+- parallelism (//): category=orientation, datum_required=True, datum_optional=False, applicable_modifiers=['MMC', 'LMC', 'RFS'], applicable_features=['flat_surface', 'hole', 'slot', 'boss', 'edge'], when_to_use: Features that must be parallel to a datum. Opposite faces of a block, rails, guide surfaces, features that must track with a reference., when_NOT_to_use: When only flatness is needed without orientation relationship (use flatness). When the angle is not 0 degrees.
+- position (⊕): category=location, datum_required=True, datum_optional=False, applicable_modifiers=['MMC', 'LMC', 'RFS'], applicable_features=['hole', 'boss', 'slot', 'pattern', 'tab', 'pin'], when_to_use: Features that must align with mating features. Bolt hole patterns, pin locations, slot positions, any feature located by basic dimensions from datums., when_NOT_to_use: Curved or complex surfaces -- use profile instead. Features without a mating relationship where form alone matters.
+- concentricity (◎): category=location, datum_required=True, datum_optional=False, applicable_modifiers=['RFS'], applicable_features=['cylinder', 'sphere', 'bore', 'shaft'], when_to_use: Only when the median line of a feature must be controlled relative to a datum axis. Extremely rare -- required for precise dynamic balance or specific median-line relationships., when_NOT_to_use: Almost always. Circular runout controls the same coaxiality relationship more practically. Only use concentricity when the median-line relationship is explicitly required by function.
+  PREFER: circular_runout -- ASME Y14.5-2018 retains concentricity but it requires deriving the median line/center, which is expensive to inspect. Circular runout controls the same relationship more practically. Use runout unless the median-line relationship is explicitly required.
+- symmetry (≡): category=location, datum_required=True, datum_optional=False, applicable_modifiers=['RFS'], applicable_features=['slot', 'tab', 'groove', 'keyway', 'notch'], when_to_use: Only when the median plane of a feature must be controlled relative to a datum center plane. Very rare in practice., when_NOT_to_use: Almost always. Position with RFS controls the same relationship more practically and is easier to inspect.
+  PREFER: position -- ASME Y14.5-2018 retains symmetry but position is preferred for locating features of size about a center plane. Symmetry requires deriving the median plane, which is expensive. Use position unless explicitly required.
+- profile_of_a_line (⌒): category=profile, datum_required=False, datum_optional=True, applicable_modifiers=['Unequally Disposed', 'RFS'], applicable_features=['curved_surface', 'complex_contour', 'cam', 'airfoil', 'cross_section'], when_to_use: 2D cross-sectional profiles that vary along the length. Cam profiles, airfoil sections, extrusion cross-sections where form must be controlled per section., when_NOT_to_use: When the entire 3D surface must be controlled (use profile of a surface). When the feature is simple enough for form controls (flatness, circularity).
+- profile_of_a_surface (⌓): category=profile, datum_required=False, datum_optional=True, applicable_modifiers=['Unequally Disposed', 'RFS'], applicable_features=['curved_surface', 'complex_surface', 'freeform', 'casting_surface', 'forging_surface', 'mold_surface'], when_to_use: Complex 3D surfaces, castings, forgings, molds, any surface defined by CAD model. Also used as a catch-all for complex features where other controls are insufficient., when_NOT_to_use: Simple planar surfaces where flatness suffices. Simple cylindrical features where cylindricity or runout is more appropriate and easier to inspect.
+- circular_runout (↗): category=runout, datum_required=True, datum_optional=False, applicable_modifiers=['RFS'], applicable_features=['cylinder', 'face', 'cone', 'shaft', 'bore', 'flange_face'], when_to_use: Rotating components where each circular element must be controlled relative to the rotation axis. Shaft journals, bearing seats, seal surfaces, flange faces. Preferred over concentricity for coaxiality control., when_NOT_to_use: When the cumulative surface must be controlled (use total runout). When only form is needed without datum relationship (use circularity).
+- total_runout (↗↗): category=runout, datum_required=True, datum_optional=False, applicable_modifiers=['RFS'], applicable_features=['cylinder', 'face', 'cone', 'shaft', 'bore', 'flange_face'], when_to_use: When the entire surface must be controlled simultaneously relative to the datum axis. Precision shafts, bearing bores, critical sealing faces., when_NOT_to_use: When per-section control is sufficient (use circular runout -- it's less restrictive and easier to achieve). When form alone matters without datum relationship.
+
+Output MUST be valid JSON matching the schema exactly. Generate 5 examples per request.
+
+=== SAMPLE USER PROMPT ===
+
+Generate 5 training pairs as a JSON array. Each pair must follow this exact schema:
+
+{
+  "input": {
+    "feature_type": "<string>",
+    "geometry": {"diameter": <float>, "height": <float>, "unit": "mm"},
+    "material": "<material_id>",
+    "manufacturing_process": "<process_id>",
+    "mating_condition": "<descriptive string>",
+    "parent_surface": "<descriptive string>"
+  },
+  "classification": {
+    "primary_control": "<characteristic_id>",
+    "symbol": "<unicode symbol>",
+    "tolerance_class": "<tight|standard|loose>",
+    "datum_required": <true|false>,
+    "modifier": "<MMC|LMC|RFS|none>",
+    "reasoning_key": "<descriptive_key>"
+  },
+  "full_output": {
+    "datum_scheme": {"A": "<surface>", "B": "<surface>"},
+    "callouts": [
+      {"feature": "<name>", "frame": "|symbol| tolerance [modifier] | datums |", "reasoning": "<1-2 sentences>"}
+    ],
+    "warnings": ["<optional warnings>"]
+  }
+}
+
+REQUIREMENTS PER EXAMPLE:
+Example 1:
+  feature_type: hole
+  material: AL6061-T6 (category: aluminum)
+  process: cnc_milling
+  target_characteristic: straightness (—)
+  complexity: single_feature
+  Achievable tolerances for cnc_milling/aluminum:
+  position: 0.025-0.127 mm
+  flatness: 0.013-0.05 mm
+  perpendicularity: 0.013-0.05 mm
+  parallelism: 0.013-0.05 mm
+  circularity: 0.013-0.025 mm
+  cylindricity: 0.013-0.038 mm
+  straightness: 0.013-0.05 mm
+  circular_runout: 0.013-0.05 mm
+  total_runout: 0.025-0.076 mm
+  profile_of_a_surface: 0.025-0.127 mm
+  Suggested datum pattern (flat_plate_with_holes): primary=largest_flat_surface (Maximum stability, 3-point contact, constrains 3 DOF (translation Z, rotation X, rotation Y)), secondary=locating_hole_or_edge, tertiary=second_hole_or_edge
+Example 2:
+  feature_type: boss
+  material: AL7075-T6 (category: aluminum)
+  process: cnc_milling
+  target_characteristic: straightness (—)
+  complexity: multi_feature_with_datum
+  Achievable tolerances for cnc_milling/aluminum:
+  position: 0.025-0.127 mm
+  flatness: 0.013-0.05 mm
+  perpendicularity: 0.013-0.05 mm
+  parallelism: 0.013-0.05 mm
+  circularity: 0.013-0.025 mm
+  cylindricity: 0.013-0.038 mm
+  straightness: 0.013-0.05 mm
+  circular_runout: 0.013-0.05 mm
+  total_runout: 0.025-0.076 mm
+  profile_of_a_surface: 0.025-0.127 mm
+  Suggested datum pattern (prismatic_block): primary=largest_face (Maximum contact area for stability. Constrains 3 DOF), secondary=longest_edge_face, tertiary=remaining_face
+Example 3:
+  feature_type: surface
+  material: Steel_1018 (category: steel)
+  process: cnc_milling
+  target_characteristic: straightness (—)
+  complexity: assembly_context
+  Achievable tolerances for cnc_milling/steel:
+  position: 0.025-0.127 mm
+  flatness: 0.013-0.076 mm
+  perpendicularity: 0.013-0.076 mm
+  parallelism: 0.013-0.076 mm
+  circularity: 0.013-0.038 mm
+  cylindricity: 0.013-0.05 mm
+  straightness: 0.013-0.076 mm
+  circular_runout: 0.013-0.076 mm
+  total_runout: 0.025-0.102 mm
+  profile_of_a_surface: 0.025-0.152 mm
+  Suggested datum pattern (cylindrical_part): primary=major_cylindrical_surface (The major OD or bore establishes the central axis. Constrains 4 DOF), secondary=end_face, tertiary=cross_hole_or_slot
+Example 4:
+  feature_type: slot
+  material: Steel_4140 (category: steel)
+  process: cnc_milling
+  target_characteristic: straightness (—)
+  complexity: single_feature
+  Achievable tolerances for cnc_milling/steel:
+  position: 0.025-0.127 mm
+  flatness: 0.013-0.076 mm
+  perpendicularity: 0.013-0.076 mm
+  parallelism: 0.013-0.076 mm
+  circularity: 0.013-0.038 mm
+  cylindricity: 0.013-0.05 mm
+  straightness: 0.013-0.076 mm
+  circular_runout: 0.013-0.076 mm
+  total_runout: 0.025-0.102 mm
+  profile_of_a_surface: 0.025-0.152 mm
+  Suggested datum pattern (flat_plate_with_holes): primary=largest_flat_surface (Maximum stability, 3-point contact, constrains 3 DOF (translation Z, rotation X, rotation Y)), secondary=locating_hole_or_edge, tertiary=second_hole_or_edge
+Example 5:
+  feature_type: groove
+  material: SS304 (category: stainless_steel)
+  process: cnc_milling
+  target_characteristic: straightness (—)
+  complexity: multi_feature_with_datum
+  Achievable tolerances for cnc_milling/stainless_steel:
+  position: 0.025-0.152 mm
+  flatness: 0.013-0.076 mm
+  perpendicularity: 0.013-0.076 mm
+  parallelism: 0.013-0.076 mm
+  circularity: 0.013-0.038 mm
+  cylindricity: 0.025-0.05 mm
+  straightness: 0.013-0.076 mm
+  circular_runout: 0.025-0.076 mm
+  total_runout: 0.025-0.102 mm
+  profile_of_a_surface: 0.025-0.152 mm
+  Suggested datum pattern (shaft_with_journals): primary=bearing_journal_surface (The bearing journal is the functional axis of rotation. Establishes datum axis, constrains 4 DOF), secondary=shoulder_face_or_second_journal, tertiary=keyway_or_flat
+
+Remember:
+- geometry fields should have realistic values for the feature type
+- mating_condition and parent_surface should be realistic engineering descriptions
+- tolerance values in callout frames MUST be within the achievable range shown above
+- For form controls: datum_required=false, NO datum refs in callouts
+- For orientation/location/runout: datum_required=true, datum refs MUST be present
+- For profile: datum_required=false, but datum refs may or may not be present depending on the use case
+- reasoning should explain WHY this control is appropriate
+- modifier must be from the characteristic's applicable_modifiers list
+- If modifier is "none" or "RFS", do not include a modifier symbol in the frame
+
+Return ONLY the JSON array, no markdown fences or extra text.

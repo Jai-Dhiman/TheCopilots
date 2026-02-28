@@ -39,9 +39,10 @@ The product's north star is the engineer's desk — specifically, their SolidWor
 
 ### Three Input Paths (One Pipeline)
 
-1. **Camera/Photo** (hackathon demo path) — Engineer photographs a part, sketch, or drawing. Gemma 3n's native multimodal processes the image, extracts features, feeds the pipeline.
-2. **Text description** — Engineer types a natural language description of a feature. Simplest input path. Always available as fallback.
-3. **SolidWorks MCP** (production path) — AI reads the feature tree, assembly mates, material properties directly from the live CAD model. Richest data. No human description needed — the AI sees the model.
+1. **FreeCAD screen capture** (hackathon demo path) — Engineer opens FreeCAD with a part model. ToleranceAI captures the CAD window via browser screen share, extracts features from the rendered view using Gemma 3n E4B's MobileNet-v5 encoder. Entirely local — the screen capture never leaves the machine.
+2. **Camera/Photo** (alternative visual path) — Engineer photographs a part, sketch, or drawing. Same Gemma 3n E4B multimodal pipeline.
+3. **Text description** — Engineer types a natural language description. Simplest input path. Always available as fallback.
+4. **SolidWorks MCP** (production path) — AI reads the feature tree, assembly mates, material properties directly from the live CAD model. Richest data. Future integration.
 
 All three paths normalize into the same feature input format and feed the identical Student → Classifier → Matcher → Brain → Worker pipeline.
 
@@ -66,9 +67,9 @@ This isn't "it's faster locally." The on-device story is:
 
 ### Live Demo — The "Oh Shit" Moment (0:30–1:15)
 
-**The desk demo:** Hold up a metal bracket (or photograph a desk component — a mounting plate, hinge, or leg bracket).
+**The desk demo:** Open FreeCAD with a bracket model on screen. Connect ToleranceAI to the FreeCAD window via screen capture.
 
-"Let me show you this with a real part. Here's a bracket from this desk — it has mounting holes, a flat contact surface, and a bend. I take a photo..."
+"Let me show you this with a real CAD model. Here's a bracket in FreeCAD — it has mounting holes, a flat contact surface, and a bend. I connect the copilot to the CAD window..."
 
 The system — running locally on this laptop — instantly:
 
@@ -84,7 +85,7 @@ All under 1 second. No internet. No cloud API. Running on this MacBook.
 
 ### Architecture Reveal (1:15–1:45)
 
-"This runs InstaLILY's exact architecture — teacher-student distillation with Gemini generating training data and Gemma running inference at the edge. An editable knowledge brain with ASME Y14.5 rules and manufacturing process capabilities. An autonomous worker that generates complete callouts with reasoning. In production, this plugs directly into SolidWorks via MCP — the AI reads the actual CAD model, no description needed."
+"This runs InstaLILY's exact architecture — teacher-student distillation with Gemini generating training data and Gemma running inference at the edge. An editable knowledge brain with ASME Y14.5 rules and manufacturing process capabilities. An autonomous worker that generates complete callouts with reasoning. The copilot watches the engineer's CAD screen — entirely on-device. Gemma 3n E4B with MobileNet-v5 processes the visual input via mlx-vlm on Apple Silicon. In production, this plugs directly into SolidWorks via MCP — the AI reads the actual CAD model, no description needed."
 
 ### Market + Close (1:45–2:00)
 
@@ -108,7 +109,7 @@ All under 1 second. No internet. No cloud API. Running on this MacBook.
 **With ToleranceAI:**
 
 1. Alex designs a bracket in SolidWorks
-2. Photographs the part (or: ToleranceAI reads the model via MCP in production)
+2. Connects ToleranceAI to their FreeCAD window — the AI sees the model on screen
 3. System identifies features, recommends datum scheme, generates callouts with reasoning
 4. Alex reads the reasoning: "Oh, THAT'S why you use profile instead of position on a curved surface"
 5. Alex applies callouts to drawing, submits

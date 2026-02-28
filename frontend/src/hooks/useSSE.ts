@@ -4,6 +4,7 @@ import type { AnalysisState, SSEAction, AnalyzeRequest } from '../types';
 export const initialState: AnalysisState = {
   status: 'idle',
   features: null,
+  cadContext: null,
   datumScheme: null,
   callouts: null,
   reasoning: null,
@@ -20,6 +21,8 @@ export function analysisReducer(state: AnalysisState, action: SSEAction): Analys
       return { ...initialState, status: 'connecting' };
     case 'feature_extraction':
       return { ...state, status: 'streaming', features: action.payload.features };
+    case 'cad_context':
+      return { ...state, status: 'streaming', cadContext: action.payload };
     case 'datum_recommendation':
       return { ...state, status: 'streaming', datumScheme: action.payload.datum_scheme };
     case 'gdt_callouts':
@@ -97,7 +100,7 @@ export function useSSE() {
     try {
       const body: AnalyzeRequest = { ...request };
       if (imageBlob) {
-        body.image = await blobToBase64(imageBlob);
+        body.image_base64 = await blobToBase64(imageBlob);
       }
 
       const response = await fetch('/api/analyze', {

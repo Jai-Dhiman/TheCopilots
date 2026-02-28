@@ -29,9 +29,10 @@ class BrainLookup:
         self.db = db
 
     async def lookup_standard(self, code: str) -> dict | None:
-        """Fetch ASME Y14.5 section by symbol or name."""
+        """Fetch ASME Y14.5 section by symbol or name (case-insensitive)."""
         return await self.db.fetchone(
-            "SELECT * FROM geometric_characteristics WHERE symbol = ? OR name = ?",
+            "SELECT * FROM geometric_characteristics "
+            "WHERE symbol = ? OR name = ? COLLATE NOCASE",
             (code, code),
         )
 

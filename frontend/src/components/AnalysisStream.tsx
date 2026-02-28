@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import type { AnalysisState } from '../types';
+import { useState, type ReactNode } from 'react';
+import type { AnalysisState, CADContext } from '../types';
 import { GDTCallout } from './GDTCallout';
 
 interface Props {
@@ -48,6 +48,56 @@ function Section({
   );
 }
 
+function CADContextPanel({ cadContext }: { cadContext: CADContext }) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (!cadContext.connected) {
+    return (
+      <div className="text-xs text-surface-500 italic">
+        FreeCAD not connected -- using vision-only analysis
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="text-xs text-surface-400 hover:text-surface-200 font-mono uppercase tracking-wide mb-2"
+      >
+        {expanded ? '[-]' : '[+]'} {cadContext.document_name ?? 'CAD Document'} -- {cadContext.objects.length} objects, {cadContext.sketches.length} sketches
+      </button>
+      {expanded && (
+        <div className="space-y-2 mt-2">
+          {cadContext.objects.map((obj, i) => (
+            <div key={i} className="bg-surface-800 border border-surface-600 p-2 text-xs font-mono">
+              <span className="text-surface-200">{(obj as Record<string, unknown>).label as string ?? (obj as Record<string, unknown>).name as string}</span>
+              <span className="text-surface-500 ml-2">{(obj as Record<string, unknown>).type as string}</span>
+              {(obj as Record<string, unknown>).dimensions && (
+                <div className="text-surface-400 mt-1">
+                  {Object.entries((obj as Record<string, unknown>).dimensions as Record<string, number>)
+                    .map(([k, v]) => `${k}: ${v}mm`)
+                    .join(' | ')}
+                </div>
+              )}
+            </div>
+          ))}
+          {cadContext.materials.length > 0 && (
+            <div className="text-xs text-surface-400">
+              Materials: {cadContext.materials.map(m => (m as Record<string, unknown>).material as string).join(', ')}
+            </div>
+          )}
+          {cadContext.bounding_box && (
+            <div className="text-xs text-surface-500 font-mono">
+              Bounding box: {cadContext.bounding_box.x_max - cadContext.bounding_box.x_min} x {cadContext.bounding_box.y_max - cadContext.bounding_box.y_min} x {cadContext.bounding_box.z_max - cadContext.bounding_box.z_min} mm
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AnalysisStream({ state }: Props) {
   if (state.status === 'idle') {
     return (
@@ -82,15 +132,32 @@ export function AnalysisStream({ state }: Props) {
             {state.features.map((f, i) => (
               <div key={i} className="bg-surface-700 border border-surface-600 p-3 text-sm">
                 <span className="text-surface-200 font-semibold">{f.feature_type}</span>
-                {f.count && <span className="text-surface-400 ml-2">x{f.count}</span>}
+                {f.geometry.count != null && <span className="text-surface-400 ml-2">x{f.geometry.count}</span>}
                 <div className="text-surface-400 mt-1 font-mono text-xs">
-                  {Object.entries(f.geometry).map(([k, v]) => `${k}: ${v}`).join(' | ')}
+                  {Object.entries(f.geometry)
+                    .filter(([k, v]) => k !== 'count' && v != null)
+                    .map(([k, v]) => `${k}: ${v}`)
+                    .join(' | ')}
+                </div>
+                <div className="text-surface-500 mt-1 text-xs">
+                  {f.material} / {f.manufacturing_process}
                 </div>
               </div>
             ))}
           </div>
         )}
       </Section>
+
+      {/* CAD Context */}
+      {state.cadContext && (
+        <Section
+          title="CAD Context"
+          show={state.cadContext !== null}
+          pending={false}
+        >
+          <CADContextPanel cadContext={state.cadContext} />
+        </Section>
+      )}
 
       {/* Datum Scheme */}
       <Section

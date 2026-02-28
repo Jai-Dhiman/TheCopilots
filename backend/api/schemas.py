@@ -1,12 +1,22 @@
 from pydantic import BaseModel
 
 
+class CADContext(BaseModel):
+    document_name: str | None = None
+    objects: list[dict] = []
+    sketches: list[dict] = []
+    materials: list[dict] = []
+    bounding_box: dict | None = None
+    source: str = "freecad_rpc"
+
+
 class AnalyzeRequest(BaseModel):
     description: str
     image_base64: str | None = None
     manufacturing_process: str | None = None
     material: str | None = None
     compare: bool = False
+    cad_context: CADContext | None = None
 
 
 class Geometry(BaseModel):

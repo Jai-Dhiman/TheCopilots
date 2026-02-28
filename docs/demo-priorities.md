@@ -20,12 +20,13 @@ These must work perfectly. If any P0 item is broken, stop everything else and fi
 
 Build these after ALL P0 items are solid and tested.
 
-1. **Image input path** — photo of desk bracket → feature extraction → GD&T
-2. **Warnings and considerations** — "your process can hold X, consider adding Y"
-3. **Example input presets** — clickable buttons for demo scenarios (perpendicular boss, hole pattern, etc.)
-4. **Standards search** — semantic lookup of ASME Y14.5 sections
-5. **Datum scheme visualization** — visual display of A/B/C datum hierarchy
-6. **Latency breakdown** — show per-layer timing in metadata
+1. **FreeCAD screen capture** — connect to FreeCAD via getDisplayMedia(), capture frame, analyze
+2. **Image input path** — photo of desk bracket OR FreeCAD screen capture → feature extraction → GD&T
+3. **Warnings and considerations** — "your process can hold X, consider adding Y"
+4. **Example input presets** — clickable buttons for demo scenarios (perpendicular boss, hole pattern, etc.)
+5. **Standards search** — semantic lookup of ASME Y14.5 sections
+6. **Datum scheme visualization** — visual display of A/B/C datum hierarchy
+7. **Latency breakdown** — show per-layer timing in metadata
 
 ### P2 — Impressive If Time Allows (Hours 6-7)
 
@@ -36,6 +37,7 @@ Only if P0 and P1 are polished and demo-rehearsed.
 3. **Multiple callout comparison** — show alternative GD&T approaches with tradeoffs
 4. **Standards reference linking** — click ASME section reference → see full rule text
 5. **Dark theme polish** — professional engineering-tool aesthetic
+6. **Watch mode** — auto-capture FreeCAD frames on change detection, continuous analysis
 
 ### P3 — Architecture Only, Don't Build (Document in ARCHITECTURE.md)
 
@@ -57,7 +59,7 @@ Only if P0 and P1 are polished and demo-rehearsed.
 | 2-3 | Gemma 270M integration (classifier) + Brain lookups | Full pipeline: text → classification → tolerance values |
 | 2-3 | Streaming display + reasoning panel | Progressive results appear in UI |
 | 3-4 | Integration: frontend ↔ backend end-to-end | Complete flow works with real models |
-| 4-5 | Image input path (P1) | Photo → features → GD&T works |
+| 4-5 | Image/screen capture input path (P1) | Photo or FreeCAD capture → features → GD&T works |
 | 5-6 | Polish: warnings, example presets, datum display | All P1 items |
 | 6-7 | Edge cases, error handling, demo rehearsal | `validate_pipeline.py` passes |
 | 7-8 | Demo rehearsal x3, offline verification, backup plan | Ready to present |
@@ -70,6 +72,7 @@ Only if P0 and P1 are polished and demo-rehearsed.
 - [ ] Base vs. fine-tuned comparison is visually obvious
 - [ ] Latency < 1 second on all scenarios
 - [ ] Status bar shows "local, zero cloud" throughout
+- [ ] FreeCAD screen capture → analyze produces reasonable GD&T
 - [ ] No console errors in browser dev tools
 - [ ] Presenter knows the 2-minute script cold
 - [ ] Backup: if live demo fails, have screenshots of working output ready
@@ -92,7 +95,7 @@ If at hour 6 you don't have image input:
 
 **For Dhiraj (CEO):** Explicitly name the layers: "This is the Teacher output [show training data]. This is the Student [Gemma 3n]. This is the Matcher [embedding lookup]. This is the Brain [tolerance tables]. This is the Worker [output]."
 
-**For Sai (CTO):** Show the latency breakdown. Say the numbers: "847 milliseconds end-to-end. 290ms student, 78ms classifier, 42ms matcher, 425ms worker. Zero cloud calls. 2.3GB total model footprint."
+**For Sai (CTO):** Show the latency breakdown. Say the numbers: "847 milliseconds end-to-end. 290ms student, 78ms classifier, 42ms matcher, 425ms worker. Zero cloud calls. 2.3GB total model footprint." Mention: "Gemma 3n E4B via mlx-vlm, native Apple Silicon, MobileNet-v5 for vision. 3-4GB total model footprint."
 
 **For Iris & Logan (Engineers):** Show the API design. Show real JSON flowing. Mention SSE streaming. They want to see it's not a hack — it's engineered.
 
