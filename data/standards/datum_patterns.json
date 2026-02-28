@@ -1,0 +1,172 @@
+{
+  "patterns": {
+    "flat_plate_with_holes": {
+      "description": "Flat plate or bracket with mounting holes",
+      "primary": {
+        "type": "largest_flat_surface",
+        "reasoning": "Maximum stability, 3-point contact, constrains 3 DOF (translation Z, rotation X, rotation Y)"
+      },
+      "secondary": {
+        "type": "locating_hole_or_edge",
+        "reasoning": "Constrains 2 DOF (translation X, translation Y), perpendicular to primary"
+      },
+      "tertiary": {
+        "type": "second_hole_or_edge",
+        "reasoning": "Constrains rotation about Z axis. Only needed if pattern orientation matters"
+      },
+      "applicable_features": ["mounting_holes", "clearance_holes", "slots", "counterbores"],
+      "typical_callouts": ["position", "flatness", "perpendicularity"],
+      "example_parts": ["mounting bracket", "base plate", "cover plate", "flange", "electronics enclosure lid"],
+      "common_mistakes": [
+        "Using a small feature as primary datum when a larger surface provides more stability",
+        "Choosing datums that don't correspond to manufacturing fixture surfaces",
+        "Not using MMC on mounting holes when functional (losing free bonus tolerance)"
+      ]
+    },
+    "shaft_with_journals": {
+      "description": "Cylindrical shaft with bearing journals, shoulders, and keyways",
+      "primary": {
+        "type": "bearing_journal_surface",
+        "reasoning": "The bearing journal is the functional axis of rotation. Establishes datum axis, constrains 4 DOF"
+      },
+      "secondary": {
+        "type": "shoulder_face_or_second_journal",
+        "reasoning": "Constrains axial translation (1 DOF). Use shoulder face or second journal"
+      },
+      "tertiary": {
+        "type": "keyway_or_flat",
+        "reasoning": "Constrains rotation about axis (1 DOF). Only needed if angular orientation matters (keyway, flat, cross-hole)"
+      },
+      "applicable_features": ["bearing_journals", "keyways", "threads", "grooves", "shoulders", "splines"],
+      "typical_callouts": ["circular_runout", "total_runout", "cylindricity", "perpendicularity", "position"],
+      "example_parts": ["motor shaft", "transmission shaft", "axle", "spindle", "camshaft", "drive shaft"],
+      "common_mistakes": [
+        "Using the entire shaft length as datum instead of the functional bearing surfaces",
+        "Forgetting to control runout relative to the bearing journal axis",
+        "Not specifying datum reference for keyway position"
+      ]
+    },
+    "housing_with_bore": {
+      "description": "Housing or block with a precision bore and mounting interface",
+      "primary": {
+        "type": "mounting_face",
+        "reasoning": "The mounting face is the primary mating surface. Constrains 3 DOF"
+      },
+      "secondary": {
+        "type": "precision_bore",
+        "reasoning": "The bore axis constrains 2 DOF. This is typically the most critical functional feature"
+      },
+      "tertiary": {
+        "type": "locating_pin_hole_or_face",
+        "reasoning": "Constrains rotation (1 DOF). May be a dowel pin hole or perpendicular face"
+      },
+      "applicable_features": ["bores", "bolt_holes", "dowel_holes", "seal_grooves", "oil_channels"],
+      "typical_callouts": ["position", "cylindricity", "perpendicularity", "circular_runout", "profile_of_a_surface"],
+      "example_parts": ["bearing housing", "gearbox case", "pump body", "valve body", "cylinder block"],
+      "common_mistakes": [
+        "Not aligning datum scheme with the assembly mating condition",
+        "Using the bore as primary when the mounting face controls the assembly relationship",
+        "Ignoring seal groove concentricity to the bore"
+      ]
+    },
+    "cylindrical_part": {
+      "description": "Axially symmetric part like a piston, bushing, or collar",
+      "primary": {
+        "type": "major_cylindrical_surface",
+        "reasoning": "The major OD or bore establishes the central axis. Constrains 4 DOF"
+      },
+      "secondary": {
+        "type": "end_face",
+        "reasoning": "Constrains axial position (1 DOF). Choose the face that mates or locates in assembly"
+      },
+      "tertiary": {
+        "type": "cross_hole_or_slot",
+        "reasoning": "Constrains rotation (1 DOF). Only needed if the part has features that break axial symmetry"
+      },
+      "applicable_features": ["OD_surfaces", "ID_surfaces", "faces", "grooves", "chamfers", "cross_holes"],
+      "typical_callouts": ["cylindricity", "circular_runout", "total_runout", "perpendicularity", "concentricity"],
+      "example_parts": ["piston", "bushing", "collar", "sleeve", "spacer", "bearing race"],
+      "common_mistakes": [
+        "Over-constraining an axially symmetric part (tertiary not needed unless asymmetric features exist)",
+        "Not controlling perpendicularity of faces to the bore/OD axis",
+        "Specifying concentricity when runout would achieve the same functional result"
+      ]
+    },
+    "l_bracket": {
+      "description": "L-shaped bracket with features on perpendicular faces",
+      "primary": {
+        "type": "larger_flat_surface",
+        "reasoning": "The larger leg provides more stability. Constrains 3 DOF"
+      },
+      "secondary": {
+        "type": "perpendicular_face",
+        "reasoning": "The other leg face constrains 2 DOF. Perpendicularity between legs is critical"
+      },
+      "tertiary": {
+        "type": "edge_or_hole",
+        "reasoning": "Constrains last DOF (sliding along the intersection). Use a hole or edge"
+      },
+      "applicable_features": ["mounting_holes", "slots", "stiffening_ribs", "gussets"],
+      "typical_callouts": ["position", "perpendicularity", "flatness", "profile_of_a_surface"],
+      "example_parts": ["angle bracket", "motor mount", "shelf bracket", "sensor mount", "structural bracket"],
+      "common_mistakes": [
+        "Not controlling perpendicularity between the two legs",
+        "Choosing the smaller leg as primary datum",
+        "Ignoring the bend radius effect on hole positions near the bend"
+      ]
+    },
+    "prismatic_block": {
+      "description": "Rectangular block or parallelepiped with machined features",
+      "primary": {
+        "type": "largest_face",
+        "reasoning": "Maximum contact area for stability. Constrains 3 DOF"
+      },
+      "secondary": {
+        "type": "longest_edge_face",
+        "reasoning": "The longest perpendicular face constrains 2 DOF and provides maximum rotational control"
+      },
+      "tertiary": {
+        "type": "remaining_face",
+        "reasoning": "Third mutually perpendicular face constrains last DOF. Completes the 3-2-1 locating scheme"
+      },
+      "applicable_features": ["holes", "pockets", "slots", "bosses", "faces", "chamfers"],
+      "typical_callouts": ["position", "flatness", "perpendicularity", "parallelism"],
+      "example_parts": ["die block", "fixture base", "manifold", "test block", "gauge block"],
+      "common_mistakes": [
+        "Not following the 3-2-1 rule (primary contacts 3 points, secondary 2, tertiary 1)",
+        "Choosing faces that aren't mutually perpendicular",
+        "Not specifying flatness on the primary datum feature"
+      ]
+    },
+    "turned_part_with_flange": {
+      "description": "Turned part with a flange face and cylindrical features",
+      "primary": {
+        "type": "flange_face",
+        "reasoning": "The flange face is the mating surface in assembly. Constrains 3 DOF"
+      },
+      "secondary": {
+        "type": "pilot_diameter_or_bore",
+        "reasoning": "The pilot diameter or bore centers the part. Constrains 2 DOF"
+      },
+      "tertiary": {
+        "type": "bolt_hole_or_keyway",
+        "reasoning": "A bolt hole or keyway constrains rotation (1 DOF). Needed for bolt circle orientation"
+      },
+      "applicable_features": ["bolt_circle", "pilot_diameter", "bore", "seal_face", "bolt_holes"],
+      "typical_callouts": ["position", "circular_runout", "perpendicularity", "flatness", "cylindricity"],
+      "example_parts": ["pipe flange", "wheel hub", "pulley", "gear blank", "flywheel", "coupling half"],
+      "common_mistakes": [
+        "Using the cylindrical surface as primary when the flange face is the assembly mating surface",
+        "Not controlling bolt circle position relative to both the face and the pilot diameter",
+        "Forgetting perpendicularity of the pilot OD/bore to the flange face"
+      ]
+    }
+  },
+  "metadata": {
+    "standard": "ASME Y14.5-2018",
+    "version": "1.0",
+    "last_updated": "2026-02-28",
+    "total_patterns": 7,
+    "notes": "Datum selection follows the 3-2-1 rule for rigid parts. Primary datum constrains 3 DOF, secondary 2, tertiary 1. Always choose datums that reflect the functional and manufacturing requirements."
+  }
+}

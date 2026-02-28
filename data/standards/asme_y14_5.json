@@ -1,0 +1,386 @@
+{
+  "characteristics": [
+    {
+      "id": "straightness",
+      "symbol": "\u2014",
+      "unicode": "\u2014",
+      "name": "Straightness",
+      "category": "form",
+      "asme_section": "\u00a75.4",
+      "datum_required": false,
+      "applicable_modifiers": ["MMC", "LMC", "RFS"],
+      "applicable_features": ["cylindrical_surface", "flat_surface", "axis", "edge"],
+      "tolerance_zone": "two parallel lines (surface) or cylindrical zone (axis)",
+      "rules": [
+        "Controls straightness of individual line elements on a surface or the derived median line of a feature of size",
+        "When applied to a surface, no datum reference is used",
+        "When applied to an axis with MMC, a virtual condition boundary is established"
+      ],
+      "when_to_use": "Long cylindrical features where bowing or bending must be controlled. Also for surface elements that must remain straight for sealing or bearing contact.",
+      "when_NOT_to_use": "When overall flatness of a surface is needed rather than individual line elements. Use flatness instead.",
+      "common_mistakes": [
+        "Confusing surface straightness with axis straightness",
+        "Applying to features where flatness would be more appropriate"
+      ],
+      "example_callout": "|\u2014| 0.05 |",
+      "prefer_instead": null,
+      "deprecation_note": null
+    },
+    {
+      "id": "flatness",
+      "symbol": "\u25b1",
+      "unicode": "\u25b1",
+      "name": "Flatness",
+      "category": "form",
+      "asme_section": "\u00a75.5",
+      "datum_required": false,
+      "applicable_modifiers": ["RFS"],
+      "applicable_features": ["flat_surface", "planar_surface", "face"],
+      "tolerance_zone": "two parallel planes",
+      "rules": [
+        "The entire surface must lie between two parallel planes separated by the specified tolerance",
+        "No datum reference is permitted",
+        "The tolerance zone applies simultaneously to all points on the surface"
+      ],
+      "when_to_use": "Surfaces that must be flat for sealing, mating, or as datum features. Critical for gasket surfaces and assembly interfaces.",
+      "when_NOT_to_use": "When you only need to control individual line elements on a surface. Use straightness instead. When orientation to a datum matters, use parallelism.",
+      "common_mistakes": [
+        "Adding datum references (flatness never uses datums)",
+        "Specifying flatness tighter than the size tolerance of the feature"
+      ],
+      "example_callout": "|\u25b1| 0.05 |",
+      "prefer_instead": null,
+      "deprecation_note": null
+    },
+    {
+      "id": "circularity",
+      "symbol": "\u25cb",
+      "unicode": "\u25cb",
+      "name": "Circularity",
+      "category": "form",
+      "asme_section": "\u00a75.6",
+      "datum_required": false,
+      "applicable_modifiers": ["RFS"],
+      "applicable_features": ["cylinder", "sphere", "cone", "bore", "shaft"],
+      "tolerance_zone": "two concentric circles in a cross-sectional plane",
+      "rules": [
+        "Each circular element of the surface must lie between two concentric circles separated by the specified tolerance",
+        "Applies independently at each cross section",
+        "No datum reference is permitted"
+      ],
+      "when_to_use": "Bearing journals, sealing surfaces, and features that must be round at each cross section. Critical for rotating components.",
+      "when_NOT_to_use": "When you need to control the entire cylindrical form (taper + circularity). Use cylindricity instead.",
+      "common_mistakes": [
+        "Confusing with cylindricity (circularity is 2D per cross-section, cylindricity is 3D)",
+        "Applying to non-circular features"
+      ],
+      "example_callout": "|\u25cb| 0.03 |",
+      "prefer_instead": null,
+      "deprecation_note": null
+    },
+    {
+      "id": "cylindricity",
+      "symbol": "\u232d",
+      "unicode": "\u232d",
+      "name": "Cylindricity",
+      "category": "form",
+      "asme_section": "\u00a75.7",
+      "datum_required": false,
+      "applicable_modifiers": ["RFS"],
+      "applicable_features": ["cylinder", "bore", "shaft", "pin"],
+      "tolerance_zone": "two coaxial cylinders",
+      "rules": [
+        "The entire cylindrical surface must lie between two coaxial cylinders separated by the specified tolerance",
+        "Controls circularity, straightness, and taper simultaneously",
+        "No datum reference is permitted"
+      ],
+      "when_to_use": "Features requiring full 3D cylindrical form control. Precision bores, hydraulic cylinder walls, bearing seats.",
+      "when_NOT_to_use": "When only roundness at individual cross sections matters (use circularity). When the relationship to a datum axis matters (use runout).",
+      "common_mistakes": [
+        "Using when circularity is sufficient (cylindricity is harder to measure and more expensive to achieve)",
+        "Specifying too tight -- cylindricity is the most restrictive form control"
+      ],
+      "example_callout": "|\u232d| 0.02 |",
+      "prefer_instead": null,
+      "deprecation_note": null
+    },
+    {
+      "id": "perpendicularity",
+      "symbol": "\u22a5",
+      "unicode": "\u22a5",
+      "name": "Perpendicularity",
+      "category": "orientation",
+      "asme_section": "\u00a76.4",
+      "datum_required": true,
+      "applicable_modifiers": ["MMC", "LMC", "RFS"],
+      "applicable_features": ["flat_surface", "boss", "hole", "slot", "wall", "pin"],
+      "tolerance_zone": "two parallel planes or cylindrical zone perpendicular to datum",
+      "rules": [
+        "The feature must lie within a tolerance zone perpendicular to the datum reference",
+        "For a surface: zone is two parallel planes perpendicular to datum",
+        "For an axis: zone is a cylinder perpendicular to datum",
+        "MMC modifier allows bonus tolerance"
+      ],
+      "when_to_use": "Features that must be 90 degrees to a datum. Mounting surfaces perpendicular to a base, bosses perpendicular to a face, walls square to a reference.",
+      "when_NOT_to_use": "When the angle is not 90 degrees (use angularity). When no datum relationship exists (use flatness or straightness).",
+      "common_mistakes": [
+        "Omitting the datum reference",
+        "Specifying perpendicularity when flatness would suffice (no datum relationship needed)"
+      ],
+      "example_callout": "|\u22a5| 0.05 | A |",
+      "prefer_instead": null,
+      "deprecation_note": null
+    },
+    {
+      "id": "angularity",
+      "symbol": "\u2220",
+      "unicode": "\u2220",
+      "name": "Angularity",
+      "category": "orientation",
+      "asme_section": "\u00a76.3",
+      "datum_required": true,
+      "applicable_modifiers": ["MMC", "LMC", "RFS"],
+      "applicable_features": ["flat_surface", "hole", "slot", "boss", "chamfer"],
+      "tolerance_zone": "two parallel planes at basic angle to datum",
+      "rules": [
+        "The feature must lie within a tolerance zone at the specified basic angle to the datum",
+        "The basic angle must be specified with a basic dimension",
+        "Controls the orientation of the feature relative to the datum"
+      ],
+      "when_to_use": "Features at an angle other than 90 degrees to a datum. Angled mounting surfaces, V-blocks, draft angles requiring precision.",
+      "when_NOT_to_use": "When the angle is exactly 90 degrees (use perpendicularity). When the angle is 0 degrees (use parallelism).",
+      "common_mistakes": [
+        "Forgetting to specify the basic angle dimension",
+        "Using angularity for 90-degree relationships (use perpendicularity instead)"
+      ],
+      "example_callout": "|\u2220| 0.05 | A |",
+      "prefer_instead": null,
+      "deprecation_note": null
+    },
+    {
+      "id": "parallelism",
+      "symbol": "//",
+      "unicode": "\u2225",
+      "name": "Parallelism",
+      "category": "orientation",
+      "asme_section": "\u00a76.5",
+      "datum_required": true,
+      "applicable_modifiers": ["MMC", "LMC", "RFS"],
+      "applicable_features": ["flat_surface", "hole", "slot", "boss", "edge"],
+      "tolerance_zone": "two parallel planes or cylindrical zone parallel to datum",
+      "rules": [
+        "The feature must lie within a tolerance zone parallel to the datum reference",
+        "For a surface: zone is two parallel planes parallel to datum",
+        "For an axis: zone is a cylinder whose axis is parallel to datum",
+        "Parallelism tolerance must be less than the size tolerance"
+      ],
+      "when_to_use": "Features that must be parallel to a datum. Opposite faces of a block, rails, guide surfaces, features that must track with a reference.",
+      "when_NOT_to_use": "When only flatness is needed without orientation relationship (use flatness). When the angle is not 0 degrees.",
+      "common_mistakes": [
+        "Omitting the datum reference",
+        "Specifying parallelism when flatness alone would meet the functional requirement"
+      ],
+      "example_callout": "|//| 0.05 | A |",
+      "prefer_instead": null,
+      "deprecation_note": null
+    },
+    {
+      "id": "position",
+      "symbol": "\u2295",
+      "unicode": "\u2295",
+      "name": "Position",
+      "category": "location",
+      "asme_section": "\u00a77.2",
+      "datum_required": true,
+      "applicable_modifiers": ["MMC", "LMC", "RFS"],
+      "applicable_features": ["hole", "boss", "slot", "pattern", "tab", "pin"],
+      "tolerance_zone": "cylindrical (\u2205) or linear",
+      "rules": [
+        "Position tolerance defines a zone within which the axis or center plane of a feature may vary from true position",
+        "True position is established by basic dimensions from datums",
+        "MMC modifier allows bonus tolerance equal to departure from MMC size",
+        "Composite position can control pattern location and feature-to-feature spacing separately"
+      ],
+      "when_to_use": "Features that must align with mating features. Bolt hole patterns, pin locations, slot positions, any feature located by basic dimensions from datums.",
+      "when_NOT_to_use": "Curved or complex surfaces -- use profile instead. Features without a mating relationship where form alone matters.",
+      "common_mistakes": [
+        "Forgetting to include datum references",
+        "Using position on curved surfaces where profile is more appropriate",
+        "Not using MMC when it would be functionally appropriate (missing free bonus tolerance)",
+        "Using diameter symbol for non-cylindrical tolerance zones"
+      ],
+      "example_callout": "|\u2295| \u22050.25 \u24c2 | A | B | C |",
+      "prefer_instead": null,
+      "deprecation_note": null
+    },
+    {
+      "id": "concentricity",
+      "symbol": "\u25ce",
+      "unicode": "\u25ce",
+      "name": "Concentricity",
+      "category": "location",
+      "asme_section": "\u00a77.6",
+      "datum_required": true,
+      "applicable_modifiers": ["RFS"],
+      "applicable_features": ["cylinder", "sphere", "bore", "shaft"],
+      "tolerance_zone": "cylindrical zone centered on datum axis",
+      "rules": [
+        "The median points of all diametrically opposed elements must lie within a cylindrical tolerance zone centered on the datum axis",
+        "Only RFS applies -- no material condition modifiers",
+        "Requires deriving the median line, which is complex and expensive to inspect"
+      ],
+      "when_to_use": "Only when the median line of a feature must be controlled relative to a datum axis. Extremely rare -- required for precise dynamic balance or specific median-line relationships.",
+      "when_NOT_to_use": "Almost always. Circular runout controls the same coaxiality relationship more practically. Only use concentricity when the median-line relationship is explicitly required by function.",
+      "common_mistakes": [
+        "Using concentricity when circular runout would achieve the same functional result",
+        "Not understanding the inspection cost -- concentricity requires deriving the median line from multiple measurements"
+      ],
+      "example_callout": "|\u25ce| 0.10 | A |",
+      "prefer_instead": "circular_runout",
+      "deprecation_note": "ASME Y14.5-2018 retains concentricity but it requires deriving the median line/center, which is expensive to inspect. Circular runout controls the same relationship more practically. Use runout unless the median-line relationship is explicitly required."
+    },
+    {
+      "id": "symmetry",
+      "symbol": "\u2261",
+      "unicode": "\u2261",
+      "name": "Symmetry",
+      "category": "location",
+      "asme_section": "\u00a77.7",
+      "datum_required": true,
+      "applicable_modifiers": ["RFS"],
+      "applicable_features": ["slot", "tab", "groove", "keyway", "notch"],
+      "tolerance_zone": "two parallel planes centered on datum center plane",
+      "rules": [
+        "The median points of all opposed elements must lie between two parallel planes centered on the datum center plane",
+        "Only RFS applies",
+        "Requires deriving the median plane, which is expensive to inspect"
+      ],
+      "when_to_use": "Only when the median plane of a feature must be controlled relative to a datum center plane. Very rare in practice.",
+      "when_NOT_to_use": "Almost always. Position with RFS controls the same relationship more practically and is easier to inspect.",
+      "common_mistakes": [
+        "Using symmetry when position would achieve the same result",
+        "Not understanding the inspection complexity"
+      ],
+      "example_callout": "|\u2261| 0.10 | A |",
+      "prefer_instead": "position",
+      "deprecation_note": "ASME Y14.5-2018 retains symmetry but position is preferred for locating features of size about a center plane. Symmetry requires deriving the median plane, which is expensive. Use position unless explicitly required."
+    },
+    {
+      "id": "profile_of_a_line",
+      "symbol": "\u2312",
+      "unicode": "\u2312",
+      "name": "Profile of a Line",
+      "category": "profile",
+      "asme_section": "\u00a78.3",
+      "datum_required": false,
+      "datum_optional": true,
+      "applicable_modifiers": ["Unequally Disposed", "RFS"],
+      "applicable_features": ["curved_surface", "complex_contour", "cam", "airfoil", "cross_section"],
+      "tolerance_zone": "two uniform offset curves from true profile in each cross section",
+      "rules": [
+        "Each line element of the surface must lie within a tolerance zone bounded by two curves offset from the true profile",
+        "Applied independently at each cross section",
+        "Can be used with or without datum references",
+        "Without datums: controls form only. With datums: controls form, orientation, and location"
+      ],
+      "when_to_use": "2D cross-sectional profiles that vary along the length. Cam profiles, airfoil sections, extrusion cross-sections where form must be controlled per section.",
+      "when_NOT_to_use": "When the entire 3D surface must be controlled (use profile of a surface). When the feature is simple enough for form controls (flatness, circularity).",
+      "common_mistakes": [
+        "Using when profile of a surface is needed (line profile only controls individual cross sections)",
+        "Not specifying the direction of the cross-sectional cuts"
+      ],
+      "example_callout": "|\u2312| 0.10 | A | B |",
+      "prefer_instead": null,
+      "deprecation_note": null
+    },
+    {
+      "id": "profile_of_a_surface",
+      "symbol": "\u2313",
+      "unicode": "\u2313",
+      "name": "Profile of a Surface",
+      "category": "profile",
+      "asme_section": "\u00a78.4",
+      "datum_required": false,
+      "datum_optional": true,
+      "applicable_modifiers": ["Unequally Disposed", "RFS"],
+      "applicable_features": ["curved_surface", "complex_surface", "freeform", "casting_surface", "forging_surface", "mold_surface"],
+      "tolerance_zone": "two uniform offset surfaces from true profile",
+      "rules": [
+        "The entire surface must lie within a tolerance zone bounded by two surfaces offset from the true profile",
+        "Controls the entire 3D surface simultaneously",
+        "Can be used with or without datum references",
+        "Without datums: controls form only. With datums: controls form, orientation, and location",
+        "Most versatile GD&T control -- can replace almost any other characteristic"
+      ],
+      "when_to_use": "Complex 3D surfaces, castings, forgings, molds, any surface defined by CAD model. Also used as a catch-all for complex features where other controls are insufficient.",
+      "when_NOT_to_use": "Simple planar surfaces where flatness suffices. Simple cylindrical features where cylindricity or runout is more appropriate and easier to inspect.",
+      "common_mistakes": [
+        "Overusing profile when simpler controls would work (flatness, perpendicularity)",
+        "Not defining the true profile with sufficient datum references for the intended control"
+      ],
+      "example_callout": "|\u2313| 0.25 | A | B | C |",
+      "prefer_instead": null,
+      "deprecation_note": null
+    },
+    {
+      "id": "circular_runout",
+      "symbol": "\u2197",
+      "unicode": "\u2197",
+      "name": "Circular Runout",
+      "category": "runout",
+      "asme_section": "\u00a79.3",
+      "datum_required": true,
+      "applicable_modifiers": ["RFS"],
+      "applicable_features": ["cylinder", "face", "cone", "shaft", "bore", "flange_face"],
+      "tolerance_zone": "two concentric circles at each measurement position",
+      "rules": [
+        "The feature must not vary by more than the specified tolerance during one full rotation about the datum axis",
+        "Applied independently at each circular measuring position",
+        "For surfaces perpendicular to the datum axis, controls circular elements (face runout)",
+        "Composite control of circularity and coaxiality (for cylinders) or perpendicularity (for faces)"
+      ],
+      "when_to_use": "Rotating components where each circular element must be controlled relative to the rotation axis. Shaft journals, bearing seats, seal surfaces, flange faces. Preferred over concentricity for coaxiality control.",
+      "when_NOT_to_use": "When the cumulative surface must be controlled (use total runout). When only form is needed without datum relationship (use circularity).",
+      "common_mistakes": [
+        "Confusing with total runout (circular runout is per-section, total runout is simultaneous)",
+        "Not establishing the datum axis correctly for the inspection setup"
+      ],
+      "example_callout": "|\u2197| 0.05 | A-B |",
+      "prefer_instead": null,
+      "deprecation_note": null
+    },
+    {
+      "id": "total_runout",
+      "symbol": "\u2197\u2197",
+      "unicode": "\u2197\u2197",
+      "name": "Total Runout",
+      "category": "runout",
+      "asme_section": "\u00a79.4",
+      "datum_required": true,
+      "applicable_modifiers": ["RFS"],
+      "applicable_features": ["cylinder", "face", "cone", "shaft", "bore", "flange_face"],
+      "tolerance_zone": "two coaxial cylinders (for cylindrical surfaces) or two parallel planes (for perpendicular surfaces)",
+      "rules": [
+        "The entire surface must not vary by more than the specified tolerance during full rotation about the datum axis with the indicator traversing the full length",
+        "Combines circularity, straightness, taper, and coaxiality into one control (for cylinders)",
+        "For faces, controls the entire face for flatness and perpendicularity simultaneously"
+      ],
+      "when_to_use": "When the entire surface must be controlled simultaneously relative to the datum axis. Precision shafts, bearing bores, critical sealing faces.",
+      "when_NOT_to_use": "When per-section control is sufficient (use circular runout -- it's less restrictive and easier to achieve). When form alone matters without datum relationship.",
+      "common_mistakes": [
+        "Using total runout when circular runout would suffice (total runout is more restrictive)",
+        "Not understanding that total runout includes straightness and taper control"
+      ],
+      "example_callout": "|\u2197\u2197| 0.05 | A-B |",
+      "prefer_instead": null,
+      "deprecation_note": null
+    }
+  ],
+  "metadata": {
+    "standard": "ASME Y14.5-2018",
+    "version": "1.0",
+    "last_updated": "2026-02-28",
+    "total_characteristics": 14,
+    "categories": ["form", "orientation", "location", "profile", "runout"]
+  }
+}

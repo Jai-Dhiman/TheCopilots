@@ -1,0 +1,328 @@
+{
+  "processes": {
+    "cnc_milling": {
+      "description": "Computer numerical control milling -- subtractive process using rotating cutting tools",
+      "materials": {
+        "aluminum": {
+          "position": { "min_mm": 0.025, "max_mm": 0.127 },
+          "flatness": { "min_mm": 0.013, "max_mm": 0.050 },
+          "perpendicularity": { "min_mm": 0.013, "max_mm": 0.050 },
+          "parallelism": { "min_mm": 0.013, "max_mm": 0.050 },
+          "circularity": { "min_mm": 0.013, "max_mm": 0.025 },
+          "cylindricity": { "min_mm": 0.013, "max_mm": 0.038 },
+          "straightness": { "min_mm": 0.013, "max_mm": 0.050 },
+          "circular_runout": { "min_mm": 0.013, "max_mm": 0.050 },
+          "total_runout": { "min_mm": 0.025, "max_mm": 0.076 },
+          "profile_of_a_surface": { "min_mm": 0.025, "max_mm": 0.127 },
+          "surface_finish_ra_um": { "min": 0.8, "max": 3.2 },
+          "notes": "Excellent machinability. 5-axis capable of tighter tolerances."
+        },
+        "steel": {
+          "position": { "min_mm": 0.025, "max_mm": 0.127 },
+          "flatness": { "min_mm": 0.013, "max_mm": 0.076 },
+          "perpendicularity": { "min_mm": 0.013, "max_mm": 0.076 },
+          "parallelism": { "min_mm": 0.013, "max_mm": 0.076 },
+          "circularity": { "min_mm": 0.013, "max_mm": 0.038 },
+          "cylindricity": { "min_mm": 0.013, "max_mm": 0.050 },
+          "straightness": { "min_mm": 0.013, "max_mm": 0.076 },
+          "circular_runout": { "min_mm": 0.013, "max_mm": 0.076 },
+          "total_runout": { "min_mm": 0.025, "max_mm": 0.102 },
+          "profile_of_a_surface": { "min_mm": 0.025, "max_mm": 0.152 },
+          "surface_finish_ra_um": { "min": 0.8, "max": 6.3 },
+          "notes": "Good machinability for low/medium carbon. Higher hardness steels require slower feeds."
+        },
+        "stainless_steel": {
+          "position": { "min_mm": 0.025, "max_mm": 0.152 },
+          "flatness": { "min_mm": 0.013, "max_mm": 0.076 },
+          "perpendicularity": { "min_mm": 0.013, "max_mm": 0.076 },
+          "parallelism": { "min_mm": 0.013, "max_mm": 0.076 },
+          "circularity": { "min_mm": 0.013, "max_mm": 0.038 },
+          "cylindricity": { "min_mm": 0.025, "max_mm": 0.050 },
+          "straightness": { "min_mm": 0.013, "max_mm": 0.076 },
+          "circular_runout": { "min_mm": 0.025, "max_mm": 0.076 },
+          "total_runout": { "min_mm": 0.025, "max_mm": 0.102 },
+          "profile_of_a_surface": { "min_mm": 0.025, "max_mm": 0.152 },
+          "surface_finish_ra_um": { "min": 0.8, "max": 6.3 },
+          "notes": "Work-hardens during machining. Use sharp tools and consistent feed rates."
+        },
+        "titanium": {
+          "position": { "min_mm": 0.038, "max_mm": 0.178 },
+          "flatness": { "min_mm": 0.025, "max_mm": 0.102 },
+          "perpendicularity": { "min_mm": 0.025, "max_mm": 0.102 },
+          "parallelism": { "min_mm": 0.025, "max_mm": 0.102 },
+          "circularity": { "min_mm": 0.025, "max_mm": 0.050 },
+          "cylindricity": { "min_mm": 0.025, "max_mm": 0.076 },
+          "straightness": { "min_mm": 0.025, "max_mm": 0.102 },
+          "circular_runout": { "min_mm": 0.025, "max_mm": 0.102 },
+          "total_runout": { "min_mm": 0.038, "max_mm": 0.127 },
+          "profile_of_a_surface": { "min_mm": 0.038, "max_mm": 0.178 },
+          "surface_finish_ra_um": { "min": 1.6, "max": 6.3 },
+          "notes": "Difficult to machine. Low thermal conductivity causes heat buildup. Use rigid setups and flood coolant."
+        },
+        "cast_iron": {
+          "position": { "min_mm": 0.025, "max_mm": 0.127 },
+          "flatness": { "min_mm": 0.013, "max_mm": 0.076 },
+          "perpendicularity": { "min_mm": 0.013, "max_mm": 0.076 },
+          "parallelism": { "min_mm": 0.013, "max_mm": 0.076 },
+          "circularity": { "min_mm": 0.013, "max_mm": 0.038 },
+          "cylindricity": { "min_mm": 0.013, "max_mm": 0.050 },
+          "straightness": { "min_mm": 0.013, "max_mm": 0.076 },
+          "circular_runout": { "min_mm": 0.013, "max_mm": 0.076 },
+          "total_runout": { "min_mm": 0.025, "max_mm": 0.102 },
+          "profile_of_a_surface": { "min_mm": 0.025, "max_mm": 0.152 },
+          "surface_finish_ra_um": { "min": 1.6, "max": 6.3 },
+          "notes": "Good machinability. Produces short chips. Dry machining often preferred."
+        },
+        "plastics": {
+          "position": { "min_mm": 0.050, "max_mm": 0.254 },
+          "flatness": { "min_mm": 0.025, "max_mm": 0.127 },
+          "perpendicularity": { "min_mm": 0.025, "max_mm": 0.127 },
+          "parallelism": { "min_mm": 0.025, "max_mm": 0.127 },
+          "circularity": { "min_mm": 0.025, "max_mm": 0.076 },
+          "cylindricity": { "min_mm": 0.038, "max_mm": 0.102 },
+          "straightness": { "min_mm": 0.025, "max_mm": 0.127 },
+          "circular_runout": { "min_mm": 0.038, "max_mm": 0.127 },
+          "total_runout": { "min_mm": 0.050, "max_mm": 0.178 },
+          "profile_of_a_surface": { "min_mm": 0.050, "max_mm": 0.254 },
+          "surface_finish_ra_um": { "min": 0.8, "max": 3.2 },
+          "notes": "Thermal expansion and flexibility limit precision. Use sharp single-flute tools. Support thin sections."
+        }
+      }
+    },
+    "cnc_turning": {
+      "description": "Computer numerical control turning -- subtractive process using rotating workpiece",
+      "materials": {
+        "aluminum": {
+          "position": { "min_mm": 0.013, "max_mm": 0.076 },
+          "circularity": { "min_mm": 0.005, "max_mm": 0.025 },
+          "cylindricity": { "min_mm": 0.008, "max_mm": 0.025 },
+          "straightness": { "min_mm": 0.005, "max_mm": 0.025 },
+          "perpendicularity": { "min_mm": 0.013, "max_mm": 0.050 },
+          "parallelism": { "min_mm": 0.013, "max_mm": 0.050 },
+          "circular_runout": { "min_mm": 0.008, "max_mm": 0.038 },
+          "total_runout": { "min_mm": 0.013, "max_mm": 0.050 },
+          "profile_of_a_surface": { "min_mm": 0.013, "max_mm": 0.076 },
+          "surface_finish_ra_um": { "min": 0.4, "max": 3.2 },
+          "notes": "Excellent results on lathe. Single-point turning achieves very tight circularity."
+        },
+        "steel": {
+          "position": { "min_mm": 0.013, "max_mm": 0.102 },
+          "circularity": { "min_mm": 0.005, "max_mm": 0.025 },
+          "cylindricity": { "min_mm": 0.008, "max_mm": 0.038 },
+          "straightness": { "min_mm": 0.008, "max_mm": 0.038 },
+          "perpendicularity": { "min_mm": 0.013, "max_mm": 0.076 },
+          "parallelism": { "min_mm": 0.013, "max_mm": 0.076 },
+          "circular_runout": { "min_mm": 0.008, "max_mm": 0.050 },
+          "total_runout": { "min_mm": 0.013, "max_mm": 0.076 },
+          "profile_of_a_surface": { "min_mm": 0.025, "max_mm": 0.102 },
+          "surface_finish_ra_um": { "min": 0.4, "max": 6.3 },
+          "notes": "Good turning characteristics. Free-machining grades (12L14, 1215) give best finish."
+        },
+        "stainless_steel": {
+          "position": { "min_mm": 0.025, "max_mm": 0.127 },
+          "circularity": { "min_mm": 0.008, "max_mm": 0.038 },
+          "cylindricity": { "min_mm": 0.013, "max_mm": 0.050 },
+          "straightness": { "min_mm": 0.008, "max_mm": 0.050 },
+          "perpendicularity": { "min_mm": 0.013, "max_mm": 0.076 },
+          "parallelism": { "min_mm": 0.013, "max_mm": 0.076 },
+          "circular_runout": { "min_mm": 0.013, "max_mm": 0.050 },
+          "total_runout": { "min_mm": 0.025, "max_mm": 0.076 },
+          "profile_of_a_surface": { "min_mm": 0.025, "max_mm": 0.127 },
+          "surface_finish_ra_um": { "min": 0.8, "max": 6.3 },
+          "notes": "Work-hardens readily. Maintain consistent chip load. Use positive rake angles."
+        },
+        "titanium": {
+          "position": { "min_mm": 0.025, "max_mm": 0.152 },
+          "circularity": { "min_mm": 0.013, "max_mm": 0.038 },
+          "cylindricity": { "min_mm": 0.013, "max_mm": 0.076 },
+          "straightness": { "min_mm": 0.013, "max_mm": 0.076 },
+          "perpendicularity": { "min_mm": 0.025, "max_mm": 0.102 },
+          "parallelism": { "min_mm": 0.025, "max_mm": 0.102 },
+          "circular_runout": { "min_mm": 0.013, "max_mm": 0.076 },
+          "total_runout": { "min_mm": 0.025, "max_mm": 0.102 },
+          "profile_of_a_surface": { "min_mm": 0.038, "max_mm": 0.152 },
+          "surface_finish_ra_um": { "min": 1.6, "max": 6.3 },
+          "notes": "Requires rigid setup and sharp tools. Low speeds, high feed. Flood coolant essential."
+        }
+      }
+    },
+    "injection_molding": {
+      "description": "Thermoplastic injection molding -- melted plastic injected into mold cavity",
+      "materials": {
+        "plastics": {
+          "position": { "min_mm": 0.076, "max_mm": 0.381 },
+          "flatness": { "min_mm": 0.050, "max_mm": 0.254 },
+          "perpendicularity": { "min_mm": 0.050, "max_mm": 0.254 },
+          "parallelism": { "min_mm": 0.050, "max_mm": 0.254 },
+          "circularity": { "min_mm": 0.038, "max_mm": 0.127 },
+          "cylindricity": { "min_mm": 0.050, "max_mm": 0.178 },
+          "straightness": { "min_mm": 0.050, "max_mm": 0.254 },
+          "profile_of_a_surface": { "min_mm": 0.076, "max_mm": 0.381 },
+          "surface_finish_ra_um": { "min": 0.1, "max": 1.6 },
+          "notes": "Tolerances depend heavily on mold quality and material shrinkage. Glass-filled materials are more dimensionally stable. Sink marks near thick sections."
+        }
+      }
+    },
+    "sheet_metal": {
+      "description": "Sheet metal fabrication -- cutting, bending, and forming flat metal sheets",
+      "materials": {
+        "aluminum": {
+          "position": { "min_mm": 0.127, "max_mm": 0.508 },
+          "flatness": { "min_mm": 0.127, "max_mm": 0.508 },
+          "perpendicularity": { "min_mm": 0.127, "max_mm": 0.508 },
+          "parallelism": { "min_mm": 0.127, "max_mm": 0.508 },
+          "straightness": { "min_mm": 0.076, "max_mm": 0.381 },
+          "profile_of_a_surface": { "min_mm": 0.127, "max_mm": 0.508 },
+          "surface_finish_ra_um": { "min": 0.8, "max": 3.2 },
+          "notes": "Springback is significant. Bend tolerances depend on material thickness and bend radius. Laser/waterjet cutting for holes."
+        },
+        "steel": {
+          "position": { "min_mm": 0.127, "max_mm": 0.508 },
+          "flatness": { "min_mm": 0.127, "max_mm": 0.508 },
+          "perpendicularity": { "min_mm": 0.127, "max_mm": 0.508 },
+          "parallelism": { "min_mm": 0.127, "max_mm": 0.508 },
+          "straightness": { "min_mm": 0.076, "max_mm": 0.381 },
+          "profile_of_a_surface": { "min_mm": 0.127, "max_mm": 0.508 },
+          "surface_finish_ra_um": { "min": 1.6, "max": 6.3 },
+          "notes": "Less springback than aluminum. Standard bend tolerances apply. CNC punching for features."
+        },
+        "stainless_steel": {
+          "position": { "min_mm": 0.127, "max_mm": 0.508 },
+          "flatness": { "min_mm": 0.127, "max_mm": 0.508 },
+          "perpendicularity": { "min_mm": 0.127, "max_mm": 0.635 },
+          "parallelism": { "min_mm": 0.127, "max_mm": 0.635 },
+          "straightness": { "min_mm": 0.076, "max_mm": 0.508 },
+          "profile_of_a_surface": { "min_mm": 0.127, "max_mm": 0.635 },
+          "surface_finish_ra_um": { "min": 0.8, "max": 3.2 },
+          "notes": "Significant springback. Requires overbending compensation. Work-hardens at bends."
+        }
+      }
+    },
+    "die_casting": {
+      "description": "Die casting -- molten metal forced into reusable steel mold under high pressure",
+      "materials": {
+        "aluminum": {
+          "position": { "min_mm": 0.127, "max_mm": 0.508 },
+          "flatness": { "min_mm": 0.076, "max_mm": 0.381 },
+          "perpendicularity": { "min_mm": 0.076, "max_mm": 0.381 },
+          "parallelism": { "min_mm": 0.076, "max_mm": 0.381 },
+          "circularity": { "min_mm": 0.076, "max_mm": 0.254 },
+          "straightness": { "min_mm": 0.076, "max_mm": 0.381 },
+          "profile_of_a_surface": { "min_mm": 0.127, "max_mm": 0.508 },
+          "surface_finish_ra_um": { "min": 1.6, "max": 6.3 },
+          "notes": "Draft angles required (1-3 degrees). Porosity possible in thick sections. Secondary machining for tight tolerances."
+        },
+        "cast_iron": {
+          "position": { "min_mm": 0.178, "max_mm": 0.635 },
+          "flatness": { "min_mm": 0.102, "max_mm": 0.508 },
+          "perpendicularity": { "min_mm": 0.102, "max_mm": 0.508 },
+          "parallelism": { "min_mm": 0.102, "max_mm": 0.508 },
+          "circularity": { "min_mm": 0.102, "max_mm": 0.381 },
+          "straightness": { "min_mm": 0.102, "max_mm": 0.508 },
+          "profile_of_a_surface": { "min_mm": 0.178, "max_mm": 0.635 },
+          "surface_finish_ra_um": { "min": 3.2, "max": 12.5 },
+          "notes": "Sand casting typically. As-cast surfaces are rough. Machine critical surfaces. Generous draft angles needed."
+        }
+      }
+    },
+    "3d_printing_fdm": {
+      "description": "Fused deposition modeling -- thermoplastic extruded through heated nozzle layer by layer",
+      "materials": {
+        "plastics": {
+          "position": { "min_mm": 0.127, "max_mm": 0.508 },
+          "flatness": { "min_mm": 0.102, "max_mm": 0.381 },
+          "perpendicularity": { "min_mm": 0.102, "max_mm": 0.381 },
+          "parallelism": { "min_mm": 0.102, "max_mm": 0.381 },
+          "circularity": { "min_mm": 0.102, "max_mm": 0.254 },
+          "cylindricity": { "min_mm": 0.127, "max_mm": 0.381 },
+          "straightness": { "min_mm": 0.102, "max_mm": 0.381 },
+          "profile_of_a_surface": { "min_mm": 0.127, "max_mm": 0.508 },
+          "surface_finish_ra_um": { "min": 6.3, "max": 25.0 },
+          "notes": "Layer lines limit surface finish. Anisotropic strength (weak between layers). Warping on large flat surfaces. Support removal leaves marks."
+        }
+      }
+    },
+    "3d_printing_sla": {
+      "description": "Stereolithography -- UV laser cures liquid photopolymer resin layer by layer",
+      "materials": {
+        "plastics": {
+          "position": { "min_mm": 0.050, "max_mm": 0.254 },
+          "flatness": { "min_mm": 0.038, "max_mm": 0.178 },
+          "perpendicularity": { "min_mm": 0.050, "max_mm": 0.254 },
+          "parallelism": { "min_mm": 0.050, "max_mm": 0.254 },
+          "circularity": { "min_mm": 0.038, "max_mm": 0.127 },
+          "cylindricity": { "min_mm": 0.050, "max_mm": 0.178 },
+          "straightness": { "min_mm": 0.038, "max_mm": 0.178 },
+          "profile_of_a_surface": { "min_mm": 0.050, "max_mm": 0.254 },
+          "surface_finish_ra_um": { "min": 1.6, "max": 6.3 },
+          "notes": "Much finer detail than FDM. Post-curing required. Parts may warp or become brittle over time with UV exposure."
+        }
+      }
+    },
+    "grinding": {
+      "description": "Precision grinding -- abrasive wheel removes material for tight tolerances and fine finish",
+      "materials": {
+        "steel": {
+          "flatness": { "min_mm": 0.003, "max_mm": 0.013 },
+          "perpendicularity": { "min_mm": 0.005, "max_mm": 0.025 },
+          "parallelism": { "min_mm": 0.003, "max_mm": 0.013 },
+          "circularity": { "min_mm": 0.003, "max_mm": 0.008 },
+          "cylindricity": { "min_mm": 0.003, "max_mm": 0.013 },
+          "straightness": { "min_mm": 0.003, "max_mm": 0.013 },
+          "circular_runout": { "min_mm": 0.003, "max_mm": 0.013 },
+          "total_runout": { "min_mm": 0.005, "max_mm": 0.025 },
+          "profile_of_a_surface": { "min_mm": 0.005, "max_mm": 0.025 },
+          "surface_finish_ra_um": { "min": 0.1, "max": 0.8 },
+          "notes": "Best tolerances of any conventional process. Hardened steels respond well. Watch for thermal damage (grinding burn)."
+        },
+        "stainless_steel": {
+          "flatness": { "min_mm": 0.003, "max_mm": 0.013 },
+          "perpendicularity": { "min_mm": 0.005, "max_mm": 0.025 },
+          "parallelism": { "min_mm": 0.003, "max_mm": 0.013 },
+          "circularity": { "min_mm": 0.003, "max_mm": 0.013 },
+          "cylindricity": { "min_mm": 0.005, "max_mm": 0.013 },
+          "straightness": { "min_mm": 0.003, "max_mm": 0.013 },
+          "circular_runout": { "min_mm": 0.005, "max_mm": 0.013 },
+          "total_runout": { "min_mm": 0.005, "max_mm": 0.025 },
+          "profile_of_a_surface": { "min_mm": 0.008, "max_mm": 0.025 },
+          "surface_finish_ra_um": { "min": 0.1, "max": 0.8 },
+          "notes": "Tends to load grinding wheel. Use open-structure wheels. Adequate coolant prevents work-hardening."
+        },
+        "titanium": {
+          "flatness": { "min_mm": 0.005, "max_mm": 0.025 },
+          "perpendicularity": { "min_mm": 0.008, "max_mm": 0.038 },
+          "parallelism": { "min_mm": 0.005, "max_mm": 0.025 },
+          "circularity": { "min_mm": 0.005, "max_mm": 0.013 },
+          "cylindricity": { "min_mm": 0.005, "max_mm": 0.025 },
+          "straightness": { "min_mm": 0.005, "max_mm": 0.025 },
+          "circular_runout": { "min_mm": 0.005, "max_mm": 0.025 },
+          "total_runout": { "min_mm": 0.008, "max_mm": 0.038 },
+          "profile_of_a_surface": { "min_mm": 0.008, "max_mm": 0.038 },
+          "surface_finish_ra_um": { "min": 0.2, "max": 1.6 },
+          "notes": "Reactive material -- fire risk with fine chips. Use silicon carbide wheels. Light cuts with flood coolant."
+        },
+        "cast_iron": {
+          "flatness": { "min_mm": 0.003, "max_mm": 0.013 },
+          "perpendicularity": { "min_mm": 0.005, "max_mm": 0.025 },
+          "parallelism": { "min_mm": 0.003, "max_mm": 0.013 },
+          "circularity": { "min_mm": 0.003, "max_mm": 0.013 },
+          "cylindricity": { "min_mm": 0.005, "max_mm": 0.013 },
+          "straightness": { "min_mm": 0.003, "max_mm": 0.013 },
+          "circular_runout": { "min_mm": 0.005, "max_mm": 0.013 },
+          "total_runout": { "min_mm": 0.005, "max_mm": 0.025 },
+          "profile_of_a_surface": { "min_mm": 0.008, "max_mm": 0.025 },
+          "surface_finish_ra_um": { "min": 0.2, "max": 1.6 },
+          "notes": "Grinds well. Graphite in structure acts as lubricant. Produces fine dust -- use proper extraction."
+        }
+      }
+    }
+  },
+  "metadata": {
+    "standard": "ASME Y14.5-2018",
+    "version": "1.0",
+    "last_updated": "2026-02-28",
+    "tolerance_unit": "mm",
+    "surface_finish_unit": "Ra (um)",
+    "notes": "Values represent typical achievable tolerances for standard production. Tighter tolerances may be achievable at increased cost."
+  }
+}
