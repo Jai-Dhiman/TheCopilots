@@ -106,9 +106,11 @@ async def _safe_match_standards(embedder, query: str) -> list[dict]:
     """Match standards with graceful degradation."""
     try:
         if embedder is None:
+            logger.debug("Standards matching skipped: embedder not loaded")
             return []
         return embedder.match_standards(query, top_k=5)
-    except Exception:
+    except Exception as e:
+        logger.warning("Standards matching failed (degraded): %s", e)
         return []
 
 
@@ -116,6 +118,7 @@ async def _safe_get_tolerances(manufacturing, classification: dict, features: di
     """Get tolerances with graceful degradation."""
     try:
         if manufacturing is None:
+            logger.debug("Tolerance lookup skipped: manufacturing DB not loaded")
             return {"tolerance_range": None, "material_properties": None}
         process = features.get("manufacturing_process", "unspecified")
         material = features.get("material", "unspecified")
@@ -125,7 +128,8 @@ async def _safe_get_tolerances(manufacturing, classification: dict, features: di
         mat_props = await manufacturing.get_material_properties(material)
 
         return {"tolerance_range": tol_range, "material_properties": mat_props}
-    except Exception:
+    except Exception as e:
+        logger.warning("Tolerance lookup failed (degraded): %s", e)
         return {"tolerance_range": None, "material_properties": None}
 
 
@@ -141,9 +145,12 @@ async def analyze(request: Request, body: AnalyzeRequest):
         freecad = getattr(request.app.state, "freecad", None)
 
         if vlm is None:
+            logger.error("Analyze request rejected: mlx-vlm not loaded")
             yield sse_error("mlx-vlm not loaded", layer="vlm")
             return
 
+        logger.info("Pipeline starting: description=%r has_image=%s has_cad=%s compare=%s",
+                     body.description[:80], body.image_base64 is not None, body.cad_context is not None, body.compare)
         timings = {}
 
         try:
@@ -189,6 +196,9 @@ async def analyze(request: Request, body: AnalyzeRequest):
 
             # Merge vision + CAD
             features = _merge_vision_and_cad(vision_features, cad_context_raw)
+            logger.info("Features extracted: type=%s material=%s process=%s cad_available=%s",
+                        features.get("feature_type"), features.get("material"),
+                        features.get("manufacturing_process"), cad_context_raw is not None)
 
             yield sse_event("feature_extraction", {
                 "features": [features],
@@ -220,7 +230,9 @@ async def analyze(request: Request, body: AnalyzeRequest):
                 logger.warning("Layer 2: parse error, retrying classification")
                 classification = await ollama.classify_gdt(features, model=finetuned_model)
             timings["classifier_ms"] = int((time.monotonic() - t0) * 1000)
-            logger.info("Layer 2 (classifier): completed in %dms", timings["classifier_ms"])
+            logger.info("Layer 2 (classifier): completed in %dms control=%s datum_required=%s confidence=%.2f",
+                        timings["classifier_ms"], classification.get("primary_control"),
+                        classification.get("datum_required"), classification.get("confidence", 0))
 
             # Fine-tuning comparison mode
             if body.compare:
@@ -274,7 +286,9 @@ async def analyze(request: Request, body: AnalyzeRequest):
                     tolerances=tolerances,
                 )
             timings["worker_ms"] = int((time.monotonic() - t0) * 1000)
-            logger.info("Layer 5 (worker): completed in %dms", timings["worker_ms"])
+            num_callouts = len(worker_result.get("callouts", []))
+            num_warnings = len(worker_result.get("warnings", []))
+            logger.info("Layer 5 (worker): completed in %dms callouts=%d warnings=%d", timings["worker_ms"], num_callouts, num_warnings)
 
             # Step 5/5: Finalizing
             yield sse_progress("finalize", "Finalizing results...", 5, 5)
@@ -291,6 +305,9 @@ async def analyze(request: Request, body: AnalyzeRequest):
             })
 
             total_ms = sum(timings.values())
+            logger.info("Pipeline complete: total=%dms student=%dms classifier=%dms matcher=%dms worker=%dms",
+                        total_ms, timings.get("student_ms", 0), timings.get("classifier_ms", 0),
+                        timings.get("matcher_ms", 0), timings.get("worker_ms", 0))
             yield sse_event("analysis_complete", {
                 "analysis_id": str(uuid4()),
                 "metadata": {
@@ -315,7 +332,7 @@ async def analyze(request: Request, body: AnalyzeRequest):
             logger.error("Pipeline error: %s", e, exc_info=True)
             yield sse_error(f"Pipeline error: {e}", layer="unknown")
 
-    return EventSourceResponse(event_generator())
+    return EventSourceResponse(event_generator(), sep="\n")
 
 
 @router.get("/standards/search")

@@ -62,7 +62,8 @@ export function parseSSEFrame(frame: string): { type: string; data: unknown } | 
 
   try {
     return { type: eventType, data: JSON.parse(dataStr) };
-  } catch {
+  } catch (e) {
+    console.warn('[SSE] Failed to parse frame data for event=%s: %s', eventType, (e as Error).message);
     return null;
   }
 }
@@ -101,11 +102,13 @@ export function useSSE() {
     abortRef.current = controller;
 
     dispatch({ type: 'connecting' });
+    console.log('[SSE] Connecting to /api/analyze');
 
     try {
       const body: AnalyzeRequest = { ...request };
       if (imageBlob) {
         body.image_base64 = await blobToBase64(imageBlob);
+        console.log('[SSE] Image attached (%d bytes base64)', body.image_base64.length);
       }
 
       const response = await fetch('/api/analyze', {
@@ -116,37 +119,52 @@ export function useSSE() {
       });
 
       if (!response.ok) {
+        console.error('[SSE] HTTP error: %d %s', response.status, response.statusText);
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
+
+      console.log('[SSE] Connected, status=%d content-type=%s', response.status, response.headers.get('content-type'));
 
       const reader = response.body!.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
+      let eventCount = 0;
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
+        // Normalize \r\n to \n so frame splitting works with any SSE server
+        buffer = buffer.replace(/\r\n/g, '\n');
         const frames = buffer.split('\n\n');
         buffer = frames.pop()!;
 
         for (const frame of frames) {
           const parsed = parseSSEFrame(frame);
           if (parsed) {
+            eventCount++;
             if (parsed.type === 'error') {
               const errorData = parsed.data as Record<string, unknown>;
               const message = typeof errorData.error === 'string' ? errorData.error : JSON.stringify(errorData);
+              console.error('[SSE] Error event (#%d): %s', eventCount, message);
               dispatch({ type: 'error', payload: message });
             } else {
+              console.log('[SSE] Event #%d: %s', eventCount, parsed.type);
               dispatch({ type: parsed.type, payload: parsed.data } as SSEAction);
             }
           }
         }
       }
+      console.log('[SSE] Stream ended, total events=%d', eventCount);
     } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') return;
-      dispatch({ type: 'error', payload: err instanceof Error ? err.message : 'Unknown error' });
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        console.log('[SSE] Aborted by user');
+        return;
+      }
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      console.error('[SSE] Connection error: %s', message);
+      dispatch({ type: 'error', payload: message });
     }
   }, [abort]);
 

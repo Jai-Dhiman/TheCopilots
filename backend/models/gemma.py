@@ -1,5 +1,10 @@
 import json
+import logging
+import time
+
 import httpx
+
+logger = logging.getLogger(__name__)
 
 
 class OllamaUnavailableError(Exception):
@@ -49,20 +54,27 @@ class OllamaClient:
             "stream": False,
         }
 
+        t0 = time.monotonic()
+        logger.info("Ollama /api/chat request to model=%s", model)
         try:
             resp = await self.client.post("/api/chat", json=payload)
             resp.raise_for_status()
         except httpx.ConnectError as e:
+            logger.error("Ollama connection failed: %s", e)
             raise OllamaUnavailableError(str(e)) from e
         except httpx.TimeoutException as e:
+            logger.error("Ollama timed out after %.1fs for model=%s", time.monotonic() - t0, model)
             raise OllamaUnavailableError(
                 f"Ollama timed out on model {model}"
             ) from e
         except httpx.HTTPStatusError as e:
+            logger.error("Ollama HTTP %d for model=%s", e.response.status_code, model)
             raise OllamaUnavailableError(
                 f"Ollama returned {e.response.status_code} for model {model}"
             ) from e
 
+        elapsed = time.monotonic() - t0
+        logger.info("Ollama /api/chat completed in %.1fs for model=%s", elapsed, model)
         return resp.json()
 
     async def chat_json(self, model: str, messages: list[dict], **kwargs) -> dict:
@@ -72,6 +84,7 @@ class OllamaClient:
         try:
             return json.loads(content)
         except json.JSONDecodeError as e:
+            logger.warning("Ollama model=%s returned invalid JSON: %s", model, content[:200])
             raise OllamaParseError(
                 f"Model {model} returned invalid JSON: {content[:200]}"
             ) from e

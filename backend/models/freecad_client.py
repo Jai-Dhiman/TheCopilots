@@ -1,9 +1,12 @@
 import json
+import logging
 
 import httpx
 
 from .freecad_extraction import EXTRACTION_SCRIPT
 from .mock_cad_contexts import get_desk_mock
+
+logger = logging.getLogger(__name__)
 
 
 class FreecadConnectionError(Exception):
@@ -44,8 +47,10 @@ class FreecadClient:
             }
             resp = await self._client.post(self.base_url, json=payload)
             resp.raise_for_status()
+            logger.info("FreeCAD RPC health check passed at %s", self.base_url)
             return True
-        except (httpx.HTTPError, httpx.ConnectError, OSError):
+        except (httpx.HTTPError, httpx.ConnectError, OSError) as e:
+            logger.debug("FreeCAD RPC not reachable at %s: %s", self.base_url, e)
             return False
 
     async def execute_python(self, code: str) -> dict:
@@ -60,10 +65,12 @@ class FreecadClient:
             resp = await self._client.post(self.base_url, json=payload)
             resp.raise_for_status()
         except httpx.ConnectError as e:
+            logger.error("FreeCAD RPC connection failed: %s", e)
             raise FreecadConnectionError(
                 f"Cannot connect to FreeCAD RPC at {self.base_url}: {e}"
             ) from e
         except httpx.HTTPError as e:
+            logger.error("FreeCAD RPC HTTP error: %s", e)
             raise FreecadConnectionError(
                 f"FreeCAD RPC request failed: {e}"
             ) from e
@@ -71,6 +78,7 @@ class FreecadClient:
         body = resp.json()
 
         if "error" in body:
+            logger.error("FreeCAD execution error: %s", body["error"])
             raise FreecadExecutionError(
                 f"FreeCAD execution error: {body['error']}"
             )
@@ -82,10 +90,12 @@ class FreecadClient:
             try:
                 result = json.loads(result)
             except json.JSONDecodeError as e:
+                logger.error("FreeCAD returned unparseable result: %s", result[:200])
                 raise FreecadExecutionError(
                     f"Failed to parse FreeCAD result as JSON: {e}"
                 ) from e
 
+        logger.info("FreeCAD execute_python completed, result keys=%s", list(result.keys()) if isinstance(result, dict) else type(result).__name__)
         return result
 
     async def extract_cad_context(self, description_hint: str = "") -> dict:

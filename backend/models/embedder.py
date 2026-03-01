@@ -1,5 +1,10 @@
+import logging
+import time
+
 import numpy as np
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 class Embedder:
@@ -15,7 +20,9 @@ class Embedder:
         """
         from sentence_transformers import SentenceTransformer
 
+        t0 = time.monotonic()
         self.model = SentenceTransformer("all-MiniLM-L6-v2")
+        logger.info("Sentence-transformer loaded in %.1fs", time.monotonic() - t0)
 
         emb_path = Path(embeddings_path)
         if emb_path.exists():
@@ -23,12 +30,17 @@ class Embedder:
             self.standard_embeddings = data["embeddings"]
             keys_field = "keys" if "keys" in data else "ids"
             self.standard_keys = data[keys_field].tolist()
+            logger.info("Loaded %d standard embeddings from %s", len(self.standard_keys), emb_path.name)
+        else:
+            logger.warning("Embeddings file not found: %s", embeddings_path)
 
     def match_standards(self, query: str, top_k: int = 5) -> list[dict]:
         """Find top-K ASME Y14.5 sections most relevant to the query."""
         if self.standard_embeddings is None:
+            logger.debug("match_standards skipped: no embeddings loaded")
             return []
 
+        t0 = time.monotonic()
         query_embedding = self.model.encode(query, normalize_embeddings=True)
         similarities = np.dot(self.standard_embeddings, query_embedding)
         top_k = min(top_k, len(self.standard_keys))
@@ -40,4 +52,5 @@ class Embedder:
                 "key": self.standard_keys[idx],
                 "score": float(similarities[idx]),
             })
+        logger.info("match_standards query=%r top_score=%.3f in %.0fms", query[:60], results[0]["score"] if results else 0.0, (time.monotonic() - t0) * 1000)
         return results
