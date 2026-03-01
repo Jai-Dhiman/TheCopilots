@@ -3,6 +3,7 @@ import json
 import httpx
 
 from .freecad_extraction import EXTRACTION_SCRIPT
+from .mock_cad_contexts import get_desk_mock
 
 
 class FreecadConnectionError(Exception):
@@ -28,9 +29,12 @@ class FreecadClient:
         self.port = port or self.DEFAULT_PORT
         self.base_url = f"http://{self.host}:{self.port}"
         self._client = httpx.AsyncClient(timeout=10.0)
+        self._mock_mode = False
 
     async def health_check(self) -> bool:
         """Check if FreeCAD RPC server is reachable."""
+        if self._mock_mode:
+            return True
         try:
             payload = {
                 "jsonrpc": "2.0",
@@ -84,11 +88,14 @@ class FreecadClient:
 
         return result
 
-    async def extract_cad_context(self) -> dict:
+    async def extract_cad_context(self, description_hint: str = "") -> dict:
         """Run the full CAD extraction script inside FreeCAD.
 
         Returns structured data: objects, sketches, materials, bounding box.
+        Falls back to mock data when in mock mode.
         """
+        if self._mock_mode:
+            return get_desk_mock()
         return await self.execute_python(EXTRACTION_SCRIPT)
 
     async def close(self):
