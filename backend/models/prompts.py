@@ -1,5 +1,7 @@
 import json
 
+PALIGEMMA_DESCRIBE_PROMPT = "Describe this CAD screenshot — what geometry, features, and manufacturing details are visible?"
+
 FEATURE_EXTRACTION_SYSTEM = """You are a mechanical engineering feature extractor. Given a description or image of a part feature, extract structured data as JSON.
 
 Output ONLY valid JSON matching this exact schema:

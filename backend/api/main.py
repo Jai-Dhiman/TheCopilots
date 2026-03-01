@@ -27,12 +27,12 @@ async def lifespan(app: FastAPI):
 
     app.state.vlm = MlxVlmClient()
     try:
-        print("Loading mlx-vlm model (gemma-3n-E4B-it-4bit)...")
+        print("Loading mlx-vlm model (paligemma2-3b-mix-224-4bit)...")
         await asyncio.wait_for(
             asyncio.to_thread(app.state.vlm.load),
             timeout=120.0,
         )
-        print("mlx-vlm loaded: gemma-3n-E4B-it-4bit")
+        print("mlx-vlm loaded: paligemma2-3b-mix-224-4bit")
     except asyncio.TimeoutError:
         print("WARNING: mlx-vlm load timed out (120s) -- running without VLM")
         app.state.vlm = None

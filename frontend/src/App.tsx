@@ -6,8 +6,8 @@ import { StatusBar } from './components/StatusBar';
 export default function App() {
   const { state, analyze, reset } = useSSE();
 
-  const handleAnalyze = (description: string, imageBlob?: Blob) => {
-    analyze({ description }, imageBlob);
+  const handleAnalyze = (blob: Blob, description: string) => {
+    analyze({ description }, blob);
   };
 
   const isStreaming = state.status === 'connecting' || state.status === 'streaming';
@@ -35,7 +35,7 @@ export default function App() {
 
       {/* Two-panel main */}
       <main className="flex-1 grid grid-cols-[35%_65%] min-h-0">
-        <div className="bg-surface-800 border-r border-surface-700 overflow-y-auto">
+        <div className="bg-surface-800 border-r border-surface-700 overflow-hidden">
           <FeatureInput onAnalyze={handleAnalyze} isStreaming={isStreaming} />
         </div>
         <div className="overflow-y-auto">

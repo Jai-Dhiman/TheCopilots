@@ -11,7 +11,7 @@ class CADContext(BaseModel):
 
 
 class AnalyzeRequest(BaseModel):
-    description: str
+    description: str = ""
     image_base64: str | None = None
     manufacturing_process: str | None = None
     material: str | None = None

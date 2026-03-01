@@ -11,9 +11,12 @@ def _make_app():
     app = FastAPI()
     app.include_router(router, prefix="/api")
 
-    # Mock mlx-vlm client (student layer -- feature extraction only)
+    # Mock mlx-vlm client (PaliGemma 2 -- image description only)
     vlm = AsyncMock()
-    vlm.extract_features = AsyncMock(return_value={
+    vlm.describe_image = AsyncMock(return_value="A cylindrical aluminum boss, 12mm diameter, on a flat mounting face")
+    # Mock Ollama client (feature extraction + classifier + worker layers)
+    ollama = AsyncMock()
+    ollama.extract_features = AsyncMock(return_value={
         "feature_type": "boss",
         "geometry": {"diameter": 12.0, "height": 8.0, "unit": "mm"},
         "material": "AL6061-T6",
@@ -21,8 +24,6 @@ def _make_app():
         "mating_condition": "bearing_bore_concentric",
         "parent_surface": "planar_mounting_face",
     })
-    # Mock Ollama client (classifier + worker layers)
-    ollama = AsyncMock()
     ollama.generate_output = AsyncMock(return_value={
         "callouts": [{
             "feature": "boss",

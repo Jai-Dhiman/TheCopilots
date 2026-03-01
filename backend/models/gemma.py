@@ -110,6 +110,18 @@ class OllamaClient:
         ]
         return await self.chat_json(model, messages)
 
+    async def extract_features(
+        self, description: str, model: str = "gemma3:1b"
+    ) -> dict:
+        """Extract structured features from a text description via Ollama."""
+        from .prompts import FEATURE_EXTRACTION_SYSTEM
+
+        messages = [
+            {"role": "system", "content": FEATURE_EXTRACTION_SYSTEM},
+            {"role": "user", "content": description},
+        ]
+        return await self.chat_json(model, messages)
+
     async def classify_gdt(
         self, features: dict, model: str = "gemma3:1b"
     ) -> dict:

@@ -8,7 +8,7 @@ from sse_starlette.sse import EventSourceResponse
 from .schemas import AnalyzeRequest, CreateDrawingRequest
 from .streaming import sse_event, sse_error, sse_progress
 from models.gemma import OllamaUnavailableError, OllamaParseError
-from models.mlx_vlm_client import MlxVlmParseError, MlxVlmTimeoutError
+from models.mlx_vlm_client import MlxVlmTimeoutError
 from models.freecad_client import FreecadConnectionError
 from models.techdraw_generator import generate_techdraw_script
 
@@ -144,33 +144,28 @@ async def analyze(request: Request, body: AnalyzeRequest):
         manufacturing = getattr(request.app.state, "manufacturing_lookup", None)
         freecad = getattr(request.app.state, "freecad", None)
 
-        if vlm is None:
-            logger.error("Analyze request rejected: mlx-vlm not loaded")
-            yield sse_error("mlx-vlm not loaded", layer="vlm")
-            return
-
         logger.info("Pipeline starting: description=%r has_image=%s has_cad=%s compare=%s",
-                     body.description[:80], body.image_base64 is not None, body.cad_context is not None, body.compare)
+                     body.description[:80] if body.description else "(none)",
+                     body.image_base64 is not None, body.cad_context is not None, body.compare)
         timings = {}
 
         try:
             # Step 1/5: Feature extraction
-            yield sse_progress("student", "Extracting features with Gemma 3n...", 1, 5)
+            yield sse_progress("student", "Extracting features with PaliGemma 2...", 1, 5)
             logger.info("Layer 1 (student): starting feature extraction")
             t0 = time.monotonic()
 
-            async def _extract_vision():
-                try:
-                    return await vlm.extract_features(
-                        text=body.description,
-                        image_base64=body.image_base64,
-                    )
-                except MlxVlmParseError:
-                    logger.warning("Layer 1: parse error, retrying with explicit JSON instruction")
-                    return await vlm.extract_features(
-                        text="Return ONLY valid JSON. " + body.description,
-                        image_base64=body.image_base64,
-                    )
+            # Describe image with PaliGemma 2 if available
+            vision_description = ""
+            if body.image_base64 and vlm is not None:
+                vision_description = await vlm.describe_image(body.image_base64)
+                logger.info("PaliGemma 2 description: %s", vision_description[:120])
+            elif body.image_base64 and vlm is None:
+                logger.warning("Image provided but mlx-vlm not loaded, skipping vision")
+
+            # Combine user description + PaliGemma description
+            parts = [p for p in [body.description, vision_description] if p]
+            combined_text = "\n".join(parts) if parts else "Analyze the captured CAD feature"
 
             async def _extract_cad():
                 if freecad is None:
@@ -182,13 +177,28 @@ async def analyze(request: Request, body: AnalyzeRequest):
                 except (FreecadConnectionError, Exception):
                     return None
 
-            # Use pre-supplied CAD context from request, or fetch live
+            # Extract structured features via Ollama + fetch CAD context
             if body.cad_context is not None:
                 cad_context_raw = body.cad_context.model_dump()
-                vision_features = await _extract_vision()
+                try:
+                    vision_features = await ollama.extract_features(combined_text)
+                except OllamaParseError:
+                    logger.warning("Layer 1: parse error, retrying extraction")
+                    vision_features = await ollama.extract_features(
+                        "Return ONLY valid JSON. " + combined_text
+                    )
             else:
+                async def _extract_features():
+                    try:
+                        return await ollama.extract_features(combined_text)
+                    except OllamaParseError:
+                        logger.warning("Layer 1: parse error, retrying extraction")
+                        return await ollama.extract_features(
+                            "Return ONLY valid JSON. " + combined_text
+                        )
+
                 vision_features, cad_context_raw = await asyncio.gather(
-                    _extract_vision(), _extract_cad()
+                    _extract_features(), _extract_cad()
                 )
 
             timings["student_ms"] = int((time.monotonic() - t0) * 1000)

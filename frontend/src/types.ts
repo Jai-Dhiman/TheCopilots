@@ -12,7 +12,7 @@ export interface CADContext {
 }
 
 export interface AnalyzeRequest {
-  description: string;
+  description?: string;
   image_base64?: string;
   manufacturing_process?: string;
   material?: string;
