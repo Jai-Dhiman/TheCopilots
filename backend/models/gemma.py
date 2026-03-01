@@ -22,7 +22,7 @@ class OllamaClient:
         self.base_url = base_url
         self.client = httpx.AsyncClient(
             base_url=base_url,
-            timeout=httpx.Timeout(30.0, connect=5.0),
+            timeout=httpx.Timeout(90.0, connect=5.0),
         )
 
     async def health_check(self) -> dict:

@@ -182,8 +182,8 @@ async def analyze(request: Request, body: AnalyzeRequest):
                 cad_context_raw = body.cad_context.model_dump()
                 try:
                     vision_features = await ollama.extract_features(combined_text)
-                except OllamaParseError:
-                    logger.warning("Layer 1: parse error, retrying extraction")
+                except (OllamaParseError, OllamaUnavailableError) as e:
+                    logger.warning("Layer 1: %s, retrying extraction", type(e).__name__)
                     vision_features = await ollama.extract_features(
                         "Return ONLY valid JSON. " + combined_text
                     )
@@ -191,8 +191,8 @@ async def analyze(request: Request, body: AnalyzeRequest):
                 async def _extract_features():
                     try:
                         return await ollama.extract_features(combined_text)
-                    except OllamaParseError:
-                        logger.warning("Layer 1: parse error, retrying extraction")
+                    except (OllamaParseError, OllamaUnavailableError) as e:
+                        logger.warning("Layer 1: %s, retrying extraction", type(e).__name__)
                         return await ollama.extract_features(
                             "Return ONLY valid JSON. " + combined_text
                         )
@@ -236,8 +236,8 @@ async def analyze(request: Request, body: AnalyzeRequest):
             finetuned_model = "gemma3:1b"
             try:
                 classification = await ollama.classify_gdt(features, model=finetuned_model)
-            except OllamaParseError:
-                logger.warning("Layer 2: parse error, retrying classification")
+            except (OllamaParseError, OllamaUnavailableError) as e:
+                logger.warning("Layer 2: %s, retrying classification", type(e).__name__)
                 classification = await ollama.classify_gdt(features, model=finetuned_model)
             timings["classifier_ms"] = int((time.monotonic() - t0) * 1000)
             logger.info("Layer 2 (classifier): completed in %dms control=%s datum_required=%s confidence=%.2f",
@@ -286,8 +286,8 @@ async def analyze(request: Request, body: AnalyzeRequest):
                     standards=standards,
                     tolerances=tolerances,
                 )
-            except OllamaParseError:
-                logger.warning("Layer 5: parse error, retrying output generation")
+            except (OllamaParseError, OllamaUnavailableError) as e:
+                logger.warning("Layer 5: %s, retrying output generation", type(e).__name__)
                 worker_result = await ollama.generate_output(
                     features=features,
                     classification=classification,
