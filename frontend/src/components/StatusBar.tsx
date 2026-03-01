@@ -34,7 +34,7 @@ export function StatusBar({ status, metadata, cadContext, currentStepMessage }: 
           {isProcessing ? (currentStepMessage ?? 'PROCESSING...') : 'READY'}
         </span>
         <span className="text-surface-600">|</span>
-        <span>Gemma 3n E4B int4 (mlx-vlm)</span>
+        <span>PaliGemma 2 3B (mlx-vlm)</span>
         <span className="text-surface-600">+</span>
         <span>Gemma 3 1B</span>
         <span className="text-surface-600">|</span>
