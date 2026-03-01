@@ -10,3 +10,4 @@ __pycache__/
 *.db-wal
 uv.lock
 Modelfile
+.DS_store

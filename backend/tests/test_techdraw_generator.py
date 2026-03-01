@@ -32,14 +32,14 @@ SAMPLE_DATUM_SCHEME = {
 
 SAMPLE_FEATURES = {
     "feature_type": "flat_surface",
-    "geometry": {"length": 600.0, "width": 400.0},
+    "geometry": {"length": 700.0, "width": 350.0},
 }
 
 
 class TestScriptGeneration:
     def test_script_is_valid_python(self):
         script = generate_techdraw_script(
-            document_name="Unnamed",
+            document_name="Table_Model",
             callouts=SAMPLE_CALLOUTS,
             datum_scheme=SAMPLE_DATUM_SCHEME,
             features=SAMPLE_FEATURES,
@@ -49,7 +49,7 @@ class TestScriptGeneration:
 
     def test_script_creates_draw_page(self):
         script = generate_techdraw_script(
-            document_name="Unnamed",
+            document_name="Table_Model",
             callouts=SAMPLE_CALLOUTS,
             datum_scheme=SAMPLE_DATUM_SCHEME,
             features=SAMPLE_FEATURES,
@@ -59,7 +59,7 @@ class TestScriptGeneration:
 
     def test_script_creates_view_part(self):
         script = generate_techdraw_script(
-            document_name="Unnamed",
+            document_name="Table_Model",
             callouts=SAMPLE_CALLOUTS,
             datum_scheme=SAMPLE_DATUM_SCHEME,
             features=SAMPLE_FEATURES,
@@ -68,7 +68,7 @@ class TestScriptGeneration:
 
     def test_script_includes_callout_annotations(self):
         script = generate_techdraw_script(
-            document_name="Unnamed",
+            document_name="Table_Model",
             callouts=SAMPLE_CALLOUTS,
             datum_scheme=SAMPLE_DATUM_SCHEME,
             features=SAMPLE_FEATURES,
@@ -79,7 +79,7 @@ class TestScriptGeneration:
 
     def test_script_includes_datum_symbols(self):
         script = generate_techdraw_script(
-            document_name="Unnamed",
+            document_name="Table_Model",
             callouts=SAMPLE_CALLOUTS,
             datum_scheme=SAMPLE_DATUM_SCHEME,
             features=SAMPLE_FEATURES,
@@ -99,7 +99,7 @@ class TestScriptGeneration:
 
     def test_empty_callouts_produces_minimal_script(self):
         script = generate_techdraw_script(
-            document_name="Unnamed",
+            document_name="Table_Model",
             callouts=[],
             datum_scheme={"primary": None, "secondary": None, "tertiary": None},
             features={},
@@ -113,7 +113,7 @@ class TestScriptGeneration:
 
     def test_script_calls_recompute(self):
         script = generate_techdraw_script(
-            document_name="Unnamed",
+            document_name="Table_Model",
             callouts=SAMPLE_CALLOUTS,
             datum_scheme=SAMPLE_DATUM_SCHEME,
             features=SAMPLE_FEATURES,
@@ -122,7 +122,7 @@ class TestScriptGeneration:
 
     def test_script_returns_result_dict(self):
         script = generate_techdraw_script(
-            document_name="Unnamed",
+            document_name="Table_Model",
             callouts=SAMPLE_CALLOUTS,
             datum_scheme=SAMPLE_DATUM_SCHEME,
             features=SAMPLE_FEATURES,

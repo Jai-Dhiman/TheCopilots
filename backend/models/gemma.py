@@ -89,6 +89,27 @@ class OllamaClient:
                 f"Model {model} returned invalid JSON: {content[:200]}"
             ) from e
 
+    async def generate_output(
+        self,
+        features: dict,
+        classification: dict,
+        datum_scheme: dict,
+        standards: list[dict],
+        tolerances: dict,
+        model: str = "gemma3:1b",
+    ) -> dict:
+        """Layer 5: Worker -- GD&T output generation via Ollama."""
+        from .prompts import WORKER_SYSTEM, build_worker_user_prompt
+
+        user_content = build_worker_user_prompt(
+            features, classification, datum_scheme, standards, tolerances
+        )
+        messages = [
+            {"role": "system", "content": WORKER_SYSTEM},
+            {"role": "user", "content": user_content},
+        ]
+        return await self.chat_json(model, messages)
+
     async def classify_gdt(
         self, features: dict, model: str = "gemma3:1b"
     ) -> dict:

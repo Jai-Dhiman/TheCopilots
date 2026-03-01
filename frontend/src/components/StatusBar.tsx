@@ -36,7 +36,7 @@ export function StatusBar({ status, metadata, cadContext, currentStepMessage }: 
         <span className="text-surface-600">|</span>
         <span>Gemma 3n E4B int4 (mlx-vlm)</span>
         <span className="text-surface-600">+</span>
-        <span>Gemma 3 270M FT</span>
+        <span>Gemma 3 1B</span>
         <span className="text-surface-600">|</span>
         <StatusIndicator color={cadContext?.connected ? '#22C55E' : '#6B7280'} />
         <span className={cadContext?.connected ? 'text-surface-300' : 'text-surface-500'}>

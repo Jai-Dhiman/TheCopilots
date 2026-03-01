@@ -269,16 +269,16 @@ async def analyze(request: Request, body: AnalyzeRequest):
             logger.info("Layer 5 (worker): starting output generation")
             t0 = time.monotonic()
             try:
-                worker_result = await vlm.generate_output(
+                worker_result = await ollama.generate_output(
                     features=features,
                     classification=classification,
                     datum_scheme=datum_scheme,
                     standards=standards,
                     tolerances=tolerances,
                 )
-            except MlxVlmParseError:
+            except OllamaParseError:
                 logger.warning("Layer 5: parse error, retrying output generation")
-                worker_result = await vlm.generate_output(
+                worker_result = await ollama.generate_output(
                     features=features,
                     classification=classification,
                     datum_scheme=datum_scheme,

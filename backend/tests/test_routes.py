@@ -11,7 +11,7 @@ def _make_app():
     app = FastAPI()
     app.include_router(router, prefix="/api")
 
-    # Mock mlx-vlm client (student + worker layers)
+    # Mock mlx-vlm client (student layer -- feature extraction only)
     vlm = AsyncMock()
     vlm.extract_features = AsyncMock(return_value={
         "feature_type": "boss",
@@ -21,7 +21,9 @@ def _make_app():
         "mating_condition": "bearing_bore_concentric",
         "parent_surface": "planar_mounting_face",
     })
-    vlm.generate_output = AsyncMock(return_value={
+    # Mock Ollama client (classifier + worker layers)
+    ollama = AsyncMock()
+    ollama.generate_output = AsyncMock(return_value={
         "callouts": [{
             "feature": "boss",
             "symbol": "\u22a5",
@@ -39,9 +41,6 @@ def _make_app():
         "standards_references": ["ASME Y14.5-2018 7.2"],
         "warnings": ["Consider position callout for bore"],
     })
-
-    # Mock Ollama client (classifier only)
-    ollama = AsyncMock()
     ollama.classify_gdt = AsyncMock(return_value={
         "primary_control": "perpendicularity",
         "symbol": "\u22a5",
