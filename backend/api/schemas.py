@@ -94,3 +94,10 @@ class WorkerResult(BaseModel):
     manufacturing_notes: str = ""
     standards_references: list[str] = []
     warnings: list[str] = []
+
+
+class CreateDrawingRequest(BaseModel):
+    document_name: str
+    callouts: list[dict]
+    datum_scheme: dict
+    features: dict

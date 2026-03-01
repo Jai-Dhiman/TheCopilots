@@ -5,11 +5,12 @@ from uuid import uuid4
 from fastapi import APIRouter, Request, HTTPException, Query
 from sse_starlette.sse import EventSourceResponse
 
-from .schemas import AnalyzeRequest
+from .schemas import AnalyzeRequest, CreateDrawingRequest
 from .streaming import sse_event, sse_error, sse_progress
 from models.gemma import OllamaUnavailableError, OllamaParseError
 from models.mlx_vlm_client import MlxVlmParseError, MlxVlmTimeoutError
 from models.freecad_client import FreecadConnectionError
+from models.techdraw_generator import generate_techdraw_script
 
 logger = logging.getLogger(__name__)
 
@@ -168,7 +169,9 @@ async def analyze(request: Request, body: AnalyzeRequest):
                 if freecad is None:
                     return None
                 try:
-                    return await freecad.extract_cad_context()
+                    return await freecad.extract_cad_context(
+                        description_hint=body.description,
+                    )
                 except (FreecadConnectionError, Exception):
                     return None
 
@@ -381,3 +384,20 @@ async def freecad_status(request: Request):
         return {"connected": False, "reason": "FreeCAD client not configured"}
     connected = await freecad.health_check()
     return {"connected": connected}
+
+
+@router.post("/freecad/create-drawing")
+async def create_drawing(request: Request, body: CreateDrawingRequest):
+    """Create a TechDraw page with GD&T annotations in FreeCAD."""
+    freecad = getattr(request.app.state, "freecad", None)
+    if freecad is None or freecad._mock_mode:
+        raise HTTPException(503, "Drawing creation requires live FreeCAD connection")
+
+    script = generate_techdraw_script(
+        document_name=body.document_name,
+        callouts=body.callouts,
+        datum_scheme=body.datum_scheme,
+        features=body.features,
+    )
+    result = await freecad.execute_python(script)
+    return {"status": "created", **result}

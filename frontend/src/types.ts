@@ -73,6 +73,13 @@ export interface AnalysisMetadata {
   connectivity_required: boolean;
 }
 
+export interface CreateDrawingRequest {
+  document_name: string;
+  callouts: Record<string, unknown>[];
+  datum_scheme: Record<string, unknown>;
+  features: Record<string, unknown>;
+}
+
 export type AnalysisStatus = 'idle' | 'connecting' | 'streaming' | 'complete' | 'error';
 
 export interface AnalysisState {

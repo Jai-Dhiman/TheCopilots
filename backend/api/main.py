@@ -64,12 +64,14 @@ async def lifespan(app: FastAPI):
     app.state.freecad = FreecadClient()
     try:
         connected = await app.state.freecad.health_check()
-        print(f"FreeCAD RPC: {'connected' if connected else 'not available'}")
-        if not connected:
-            app.state.freecad = None
+        if connected:
+            print("FreeCAD RPC: connected")
+        else:
+            app.state.freecad._mock_mode = True
+            print("FreeCAD RPC: using mock data (demo mode)")
     except Exception:
-        print("FreeCAD RPC: not available (continuing without)")
-        app.state.freecad = None
+        app.state.freecad._mock_mode = True
+        print("FreeCAD RPC: using mock data (demo mode)")
 
     yield
 
